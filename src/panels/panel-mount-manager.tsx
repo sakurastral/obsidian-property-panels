@@ -40,8 +40,7 @@ export class PanelMountManager {
       let mounted = this.mounted.get(key);
       if (!mounted || !mounted.container.isConnected) {
         if (mounted) mounted.root.unmount();
-        const container = document.createElement("div");
-        container.className = "property-panels-root";
+        const container = createDiv({ cls: "property-panels-root" });
         container.dataset.propertyPanelId = panel.id;
         container.dataset.propertyPanelKey = key;
         this.resolver.place(container, placement);
@@ -83,7 +82,7 @@ export class PanelMountManager {
     if (this.observed.has(view)) return;
     const target = view.containerEl.querySelector<HTMLElement>(".view-content") ?? view.containerEl;
     const state: ObservedView = { observer: new MutationObserver((records) => {
-      const external = records.some((record) => !(record.target instanceof Element) || !record.target.closest(".property-panels-root"));
+      const external = records.some((record) => !record.target.instanceOf(Element) || !record.target.closest(".property-panels-root"));
       if (!external) return;
       window.clearTimeout(state.timer);
       state.timer = window.setTimeout(() => this.refresh(view), 100);

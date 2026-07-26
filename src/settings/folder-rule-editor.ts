@@ -40,8 +40,8 @@ export function renderFolderRuleEditor(parent: HTMLElement, plugin: PropertyPane
 
     const grid = body.createDiv({ cls: "property-panels-editor-grid" });
     new Setting(grid).setName("Name").addText((text) => text.setValue(rule.name).onChange(async (value) => { rule.name = value; await plugin.saveSettings(); }));
-    new Setting(grid).setName("Folder path").setDesc("Start typing to select a Vault folder. Use an empty path for the Vault root.").addText((text) => {
-      text.setValue(rule.path).setPlaceholder("Knowledge/Tools").onChange(async (value) => { rule.path = normalizePath(value); await plugin.saveSettings(); });
+    new Setting(grid).setName("Folder path").setDesc("Start typing to select a vault folder. Use an empty path for the vault root.").addText((text) => {
+      text.setValue(rule.path).setPlaceholder("Knowledge/tools").onChange(async (value) => { rule.path = normalizePath(value); await plugin.saveSettings(); });
       attachFolderSuggest(text.inputEl);
     });
     new Setting(grid).setName("Enabled").addToggle((toggle) => toggle.setValue(rule.enabled).onChange(async (value) => { rule.enabled = value; await plugin.saveSettings(); }));

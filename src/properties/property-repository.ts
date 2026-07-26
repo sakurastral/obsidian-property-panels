@@ -6,15 +6,14 @@ export class PropertyRepository {
   constructor(private readonly app: App, private readonly deleteEmpty: () => boolean) {}
 
   read(file: TFile, property: string): PropertyValue {
-    const value: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.[property];
-    if (value == null || ["string", "number", "boolean"].includes(typeof value)) return value as PropertyValue;
-    if (Array.isArray(value)) return value.map(String);
-    return String(value);
+    const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const value = isRecord(frontmatter) ? frontmatter[property] : undefined;
+    return toPropertyValue(value);
   }
 
   async write(file: TFile, property: string, value: PropertyValue): Promise<void> {
     this.localWrites.set(`${file.path}:${property}`, Date.now());
-    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+    await this.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
       const empty = value == null || value === "" || (Array.isArray(value) && value.length === 0);
       if (empty && this.deleteEmpty()) delete frontmatter[property];
       else frontmatter[property] = value;
@@ -30,5 +29,26 @@ export class PropertyRepository {
       if (changed.path === file.path) callback();
     });
     return () => this.app.metadataCache.offref(ref);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toPropertyValue(value: unknown): PropertyValue {
+  if (value == null) return value;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => {
+      if (typeof item === "string") return [item];
+      if (typeof item === "number" || typeof item === "boolean") return [String(item)];
+      return [];
+    });
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return undefined;
   }
 }

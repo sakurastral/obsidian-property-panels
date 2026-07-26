@@ -46,19 +46,27 @@ export class OptionService {
         return inside && (source.recursive || !relative.includes("/")) && !excluded.has(file.path);
       });
       const items = files.map((file) => {
-        const labelValue = source.labelProperty
-          ? this.app.metadataCache.getFileCache(file)?.frontmatter?.[source.labelProperty]
+        const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const labelValue = source.labelProperty && isRecord(frontmatter)
+          ? frontmatter[source.labelProperty]
           : undefined;
-        return { value: source.value === "path" ? file.path : file.basename, label: labelValue == null ? file.basename : String(labelValue) };
+        return {
+          value: source.value === "path" ? file.path : file.basename,
+          label: optionText(labelValue) ?? file.basename
+        };
       });
       return source.sort ? items.sort((a, b) => a.label.localeCompare(b.label)) : items;
     }
     const abstract = this.app.vault.getAbstractFileByPath(normalizePath(source.path));
     if (!(abstract instanceof TFile)) throw new Error(`Option source file not found: ${source.path}`);
     if (source.type === "file-property") {
-      const value: unknown = this.app.metadataCache.getFileCache(abstract)?.frontmatter?.[source.property];
-      const values = Array.isArray(value) ? value : value == null ? [] : [value];
-      return values.map((item) => ({ value: String(item), label: String(item) }));
+      const frontmatter: unknown = this.app.metadataCache.getFileCache(abstract)?.frontmatter;
+      const value = isRecord(frontmatter) ? frontmatter[source.property] : undefined;
+      const values: unknown[] = Array.isArray(value) ? value : value == null ? [] : [value];
+      return values.flatMap((item) => {
+        const text = optionText(item);
+        return text === undefined ? [] : [{ value: text, label: text }];
+      });
     }
     const text = await this.app.vault.cachedRead(abstract);
     const section = source.heading ? extractHeading(text, source.heading) : text;
@@ -67,6 +75,16 @@ export class OptionService {
       return { value, label: value };
     });
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function optionText(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return undefined;
 }
 
 function extractHeading(markdown: string, heading: string): string {

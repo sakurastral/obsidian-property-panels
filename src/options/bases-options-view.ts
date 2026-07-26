@@ -39,7 +39,8 @@ export class PropertyPanelsBasesView extends BasesView {
   }
 
   onDataUpdated(): void {
-    const key = String(this.config.get("cacheKey") ?? "").trim();
+    const configuredKey: unknown = this.config.get("cacheKey");
+    const key = typeof configuredKey === "string" ? configuredKey.trim() : "";
     const valueProperty = this.config.getAsPropertyId("valueProperty");
     const labelProperty = this.config.getAsPropertyId("labelProperty");
     const items: OptionItem[] = this.data.data.map((entry) => {
@@ -54,9 +55,9 @@ export class PropertyPanelsBasesView extends BasesView {
   private renderStatus(key: string, items: OptionItem[]): void {
     this.container.empty();
     const root = this.container.createDiv({ cls: "property-panels-bases-view" });
-    root.createEl("h3", { text: "Property Panels option cache" });
+    root.createEl("h3", { text: "Property panels option cache" });
     if (!key) {
-      root.createEl("p", { text: "Set “Property Panels cache key” in this view's options before using it as an option source.", cls: "property-panels-bases-warning" });
+      root.createEl("p", { text: "Set “property panels cache key” in this view's options before using it as an option source.", cls: "property-panels-bases-warning" });
       return;
     }
     root.createEl("p", { text: `${items.length} option${items.length === 1 ? "" : "s"} cached as “${key}”.` });

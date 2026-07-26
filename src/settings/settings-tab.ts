@@ -16,7 +16,6 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     this.closeFolderSuggests();
     this.containerEl.empty();
     this.containerEl.addClass("property-panels-settings");
-    this.containerEl.createEl("h2", { text: "Property Panels" });
     this.containerEl.createEl("p", { text: "Configure editable frontmatter panels and folder-specific layouts. Changes are applied to every open Markdown view." });
     const rerender = this.rerenderPreservingViewState;
 
@@ -50,7 +49,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
   private readonly attachFolderSuggest = (input: HTMLInputElement): void => {
     const suggest = new FolderPathSuggest(this.app, input);
     this.folderSuggests.add(suggest);
-    input.placeholder ||= "Start typing a Vault folder…";
+    input.placeholder ||= "Start typing a vault folder…";
   };
 
   private closeFolderSuggests(): void {
@@ -60,7 +59,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
   private renderBehavior(): void {
     const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    section.createEl("h3", { text: "Behavior" });
+    new Setting(section).setName("Behavior").setHeading();
     new Setting(section).setName("Text save delay").setDesc("Milliseconds to wait before saving text and textarea fields.")
       .addText((text) => {
         text.inputEl.type = "number";
@@ -81,7 +80,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
   private renderGlobalLayout(): void {
     const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    section.createEl("h3", { text: "Default layout" });
+    new Setting(section).setName("Default layout").setHeading();
     const layout = this.plugin.settings.defaultConfig.layout;
     new Setting(section).setName("Columns").addDropdown((dropdown) => dropdown.addOptions({ "1": "1", "2": "2", "3": "3", "4": "4" }).setValue(String(layout.columns)).onChange(async (value) => {
       layout.columns = Number(value); await this.plugin.saveSettings();
@@ -98,7 +97,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
   private renderRuleTester(): void {
     const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    section.createEl("h3", { text: "Folder rule tester" });
+    new Setting(section).setName("Folder rule tester").setHeading();
     let testPath = "";
     const output = section.createEl("pre", { cls: "property-panels-rule-test" });
     const update = () => {
@@ -122,18 +121,21 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
       .addButton((button) => button.setButtonText("Copy JSON").onClick(async () => {
         try {
           await window.navigator.clipboard.writeText(JSON.stringify(this.plugin.settings, null, 2));
-          new Notice("Property Panels configuration copied.");
+          new Notice("Property panels configuration copied.");
         } catch {
           new Notice("Clipboard unavailable. Copy the JSON from the editor below.");
         }
       }))
-      .addButton((button) => button.setWarning().setButtonText("Restore defaults").onClick(() => {
-        new RestoreDefaultsModal(this.app, async () => {
-          this.plugin.settings = structuredClone(DEFAULT_SETTINGS);
-          await this.plugin.saveSettings();
-          this.display();
-        }).open();
-      }));
+      .addButton((button) => {
+        button.setButtonText("Restore defaults").onClick(() => {
+          new RestoreDefaultsModal(this.app, async () => {
+            this.plugin.settings = structuredClone(DEFAULT_SETTINGS);
+            await this.plugin.saveSettings();
+            this.display();
+          }).open();
+        });
+        button.buttonEl.addClass("mod-warning");
+      });
     const editor = details.createEl("textarea", { cls: "property-panels-settings-json" });
     editor.value = JSON.stringify(this.plugin.settings, null, 2);
     new Setting(details).addButton((button) => button.setCta().setButtonText("Validate and save").onClick(async () => {
@@ -142,7 +144,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
         this.plugin.settings = this.plugin.normalizeSettings(parsed);
         await this.plugin.saveSettings();
         this.display();
-        new Notice("Property Panels settings saved.");
+        new Notice("Property panels settings saved.");
       } catch (error) {
         new Notice(`Invalid settings: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -151,7 +153,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
   private renderDiagnostics(): void {
     const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    section.createEl("h3", { text: "Diagnostics" });
+    new Setting(section).setName("Diagnostics").setHeading();
     const diagnostics = this.plugin.getDiagnostics();
     section.createEl("pre", { text: JSON.stringify(diagnostics, null, 2), cls: "property-panels-rule-test" });
     new Setting(section).setName("Copy diagnostics").setDesc("Copies counts only; note paths and property values are not included.")
@@ -170,7 +172,7 @@ const pathDepth = (path: string): number => path.split("/").filter(Boolean).leng
 class RestoreDefaultsModal extends Modal {
   constructor(app: App, private readonly restore: () => Promise<void>) { super(app); }
   onOpen(): void {
-    this.contentEl.createEl("h2", { text: "Restore Property Panels defaults?" });
+    this.contentEl.createEl("h2", { text: "Restore property panels defaults?" });
     this.contentEl.createEl("p", { text: "This replaces every panel, field, folder rule, and behavior setting. Copy the JSON configuration first if you may need it later." });
     const actions = this.contentEl.createDiv({ cls: "property-panels-modal-actions" });
     const cancel = actions.createEl("button", { text: "Cancel" });
@@ -179,7 +181,7 @@ class RestoreDefaultsModal extends Modal {
     restore.addEventListener("click", () => {
       restore.disabled = true;
       void this.restore()
-        .then(() => { new Notice("Property Panels defaults restored."); this.close(); })
+        .then(() => { new Notice("Property panels defaults restored."); this.close(); })
         .catch((error: unknown) => {
           restore.disabled = false;
           new Notice(`Unable to restore defaults: ${error instanceof Error ? error.message : String(error)}`);

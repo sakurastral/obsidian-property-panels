@@ -26,7 +26,7 @@ export function renderFieldEditor(
     actionButton(actions, "Delete", "Delete field", false, async () => { fields.splice(index, 1); await persist(plugin, rerender); }, true);
 
     const grid = card.createDiv({ cls: "property-panels-editor-grid" });
-    new Setting(grid).setName("Property").addText((text) => text.setValue(field.property).setPlaceholder("description").onChange(async (value) => {
+    new Setting(grid).setName("Property").addText((text) => text.setValue(field.property).setPlaceholder("Description").onChange(async (value) => {
       field.property = value.trim(); await plugin.saveSettings();
     }));
     new Setting(grid).setName("Label").addText((text) => text.setValue(field.label ?? "").setPlaceholder(field.property).onChange(async (value) => {
@@ -34,7 +34,7 @@ export function renderFieldEditor(
       await plugin.saveSettings();
     }));
     new Setting(grid).setName("Type").addDropdown((dropdown) => {
-      FIELD_TYPES.forEach((type) => dropdown.addOption(type, type));
+      FIELD_TYPES.forEach((type) => { dropdown.addOption(type, type); });
       dropdown.setValue(field.type).onChange(async (value) => {
         field.type = value as PropertyFieldType;
         field.editable = field.type !== "readonly";
@@ -93,7 +93,7 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
   const advanced = card.createDiv({ cls: "property-panels-editor-subsection" });
   advanced.createEl("h6", { text: "Option source" });
   new Setting(advanced).setName("Source type").addDropdown((dropdown) => {
-    SOURCE_TYPES.forEach((type) => dropdown.addOption(type, type === "bases" ? "Bases cache (experimental)" : type));
+    SOURCE_TYPES.forEach((type) => { dropdown.addOption(type, type === "bases" ? "Bases cache (experimental)" : type); });
     dropdown.setValue(source.type).onChange(async (value) => { field.optionSource = sourceForType(value as OptionSourceConfig["type"]); await persist(plugin, rerender); });
   });
   if (field.type === "multi-select") {
@@ -101,7 +101,7 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
   }
   if (source.type === "static") {
     const setting = new Setting(advanced).setName("Options").setDesc("One option per line. Use value | label for a custom label.");
-    setting.addTextArea((area) => area.setValue(formatOptions(source.options)).setPlaceholder("draft | Draft\npublished | Published").onChange(async (value) => {
+    setting.addTextArea((area) => area.setValue(formatOptions(source.options)).setPlaceholder("One option per line").onChange(async (value) => {
       source.options = parseOptions(value); await plugin.saveSettings();
     }));
   } else {

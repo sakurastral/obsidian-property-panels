@@ -87,10 +87,9 @@ export default class PropertyPanelsPlugin extends Plugin {
     const text = JSON.stringify(this.getDiagnostics(), null, 2);
     try {
       await window.navigator.clipboard.writeText(text);
-      new Notice("Property Panels diagnostics copied.");
+      new Notice("Property panels diagnostics copied.");
     } catch {
-      console.info("[Property Panels] Diagnostics", text);
-      new Notice("Clipboard unavailable. Diagnostics were written to the developer console.");
+      new Notice("Clipboard unavailable. Open settings to view diagnostics.");
     }
   }
 

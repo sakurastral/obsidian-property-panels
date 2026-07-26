@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, CSSProperties, KeyboardEvent } from "react";
 import type { TFile } from "obsidian";
 import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, PropertyValue } from "../types";
 import type { PropertyRepository } from "../properties/property-repository";
@@ -18,7 +19,7 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
   const style = {
     "--property-panels-columns": String(effective.columns),
     "--property-panels-field-gap": `${effective.fieldGap ?? 10}px`
-  } as React.CSSProperties;
+  } as CSSProperties;
   return (
     <section className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
       <header className="property-panels-header">
@@ -102,7 +103,7 @@ function TextControl({ id, value, field, file, repository, saveDelay, revision, 
     id, value: draft, disabled: !field.editable, placeholder: field.placeholder,
     onFocus: () => { focused.current = true; },
     onBlur: () => { focused.current = false; window.clearTimeout(timer.current); write(draft); },
-    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => update(event.target.value)
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => update(event.target.value)
   };
   return multiline ? <textarea {...common} rows={3} /> : <input {...common} type="text" />;
 }
@@ -126,7 +127,7 @@ function RatingControl({ id, value, field, write }: ControlProps & { write: (val
     write(rating);
     buttons.current[rating - 1]?.focus();
   };
-  const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, rating: number) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, rating: number) => {
     const result = ratingKeyboardResult(event.key, rating, max, field.rating?.allowClear ?? false);
     if (result.type === "none") return;
     event.preventDefault();
@@ -183,13 +184,13 @@ function MultiSelect({ id, field, items, selected, status, error, write }: { id:
   const available = custom ? [custom] : filtered;
   useEffect(() => setActiveIndex((index) => Math.min(index, Math.max(available.length - 1, 0))), [available.length]);
   const add = (item: string) => { if (item && !selected.includes(item)) write([...selected, item]); setQuery(""); setActiveIndex(0); input.current?.focus(); };
-  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown" && available.length) {
       event.preventDefault(); setActiveIndex((index) => nextOptionIndex(index, available.length, "ArrowDown"));
     } else if (event.key === "ArrowUp" && available.length) {
       event.preventDefault(); setActiveIndex((index) => nextOptionIndex(index, available.length, "ArrowUp"));
     } else if (event.key === "Enter" && available[activeIndex]) {
-      event.preventDefault(); add(available[activeIndex]!.value);
+      event.preventDefault(); add(available[activeIndex].value);
     } else if (event.key === "Escape") {
       event.preventDefault(); setQuery(""); setActiveIndex(0);
     } else if (event.key === "Backspace" && query === "" && selected.length) {

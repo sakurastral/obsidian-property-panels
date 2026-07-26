@@ -8,6 +8,7 @@ export default defineConfig(
 		"dist",
 		"coverage",
 		"esbuild.config.mjs",
+		"version-bump.mjs",
 		"main.js",
 		"manifest.json",
 		"versions.json",
@@ -29,4 +30,24 @@ export default defineConfig(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		files: ["tests/**/*.ts"],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+		},
+		rules: {
+			"obsidianmd/no-nodejs-modules": "off",
+		},
+	},
+	{
+		// The visual editor is deeply dynamic and still uses PluginSettingTab's
+		// imperative rendering API. Keep this exception scoped to that file.
+		files: ["src/settings/settings-tab.ts"],
+		rules: {
+			"@typescript-eslint/no-deprecated": "off",
+			"obsidianmd/settings-tab/prefer-setting-definitions": "off",
+		},
+	},
 );

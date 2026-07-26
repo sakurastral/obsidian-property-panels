@@ -381,7 +381,7 @@ settings:
 .property-panels-rule-test { padding: 10px; background: var(--background-secondary); border-radius: 6px; white-space: pre-wrap; }
 .property-panels-settings { --property-panels-editor-border: var(--background-modifier-border); }
 .property-panels-editor-section { margin: 24px 0; padding-top: 4px; }
-.property-panels-editor-section > h3 { margin-bottom: 4px; }
+.property-panels-editor-section > .setting-item-heading { margin-bottom: 4px; }
 .property-panels-editor-panel,
 .property-panels-editor-rule {
   margin: 10px 0;
