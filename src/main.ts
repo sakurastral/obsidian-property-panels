@@ -1,114 +1,105 @@
-import {
-	Editor,
-	MarkdownView,
-	MarkdownFileInfo,
-	Modal,
-	Notice,
-	Plugin,
-} from 'obsidian';
-import {
-	DEFAULT_SETTINGS,
-	MyPluginSettings,
-	SampleSettingTab,
-} from './settings';
+import { MarkdownView, Notice, Plugin } from "obsidian";
+import { ConfigResolver } from "./config/config-resolver";
+import { OptionService } from "./options/option-service";
+import { BasesOptionCache } from "./options/bases-option-cache";
+import { PROPERTY_PANELS_BASES_VIEW, PropertyPanelsBasesView, basesViewOptions } from "./options/bases-options-view";
+import { PanelMountManager } from "./panels/panel-mount-manager";
+import { PositionResolver } from "./placement/position-resolver";
+import { PropertyRepository } from "./properties/property-repository";
+import { DEFAULT_SETTINGS } from "./settings/defaults";
+import { PropertyPanelsSettingTab } from "./settings/settings-tab";
+import { normalizeSettings } from "./settings/settings-normalizer";
+import type { PluginSettings } from "./types";
 
-// Remember to rename these classes and interfaces!
+export default class PropertyPanelsPlugin extends Plugin {
+  settings: PluginSettings = structuredClone(DEFAULT_SETTINGS);
+  configResolver = new ConfigResolver(this.settings);
+  private repository!: PropertyRepository;
+  private options!: OptionService;
+  private basesCache!: BasesOptionCache;
+  private mounts!: PanelMountManager;
 
-export default class MyPlugin extends Plugin {
-	settings!: MyPluginSettings;
+  async onload(): Promise<void> {
+    this.settings = this.normalizeSettings(await this.loadData());
+    this.configResolver = new ConfigResolver(this.settings);
+    this.repository = new PropertyRepository(this.app, () => this.settings.behavior.deleteEmptyValues);
+    this.basesCache = new BasesOptionCache(() => this.options?.clear());
+    this.options = new OptionService(this.app, this.basesCache);
+    this.registerBasesView(PROPERTY_PANELS_BASES_VIEW, {
+      name: "Property Panels Options",
+      icon: "lucide-list-filter",
+      factory: (controller, containerEl) => new PropertyPanelsBasesView(controller, containerEl, this.basesCache),
+      options: basesViewOptions
+    });
+    const positionResolver = new PositionResolver((message) => {
+      if (this.settings.behavior.debugLogging) console.debug(`[Property Panels] ${message}`);
+    });
+    this.mounts = new PanelMountManager(this.configResolver, this.repository, this.options, positionResolver, () => this.settings.behavior.textSaveDelay);
+    this.addSettingTab(new PropertyPanelsSettingTab(this.app, this));
+    this.app.workspace.trigger("parse-style-settings");
+    this.addCommand({
+      id: "copy-diagnostics",
+      name: "Copy diagnostics",
+      callback: () => void this.copyDiagnostics()
+    });
 
-	async onload() {
-		await this.loadSettings();
+    this.registerEvent(this.app.workspace.on("layout-change", () => this.refresh()));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.refresh()));
+    this.registerEvent(this.app.workspace.on("file-open", () => this.refresh()));
+    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+      this.configResolver.clear();
+      this.options.invalidatePath(oldPath);
+      this.options.invalidatePath(file.path);
+      this.refresh();
+    }));
+    this.registerEvent(this.app.vault.on("modify", (file) => this.options.invalidatePath(file.path)));
+    this.registerEvent(this.app.vault.on("create", (file) => this.options.invalidatePath(file.path)));
+    this.registerEvent(this.app.vault.on("delete", (file) => this.options.invalidatePath(file.path)));
+    this.app.workspace.onLayoutReady(() => this.refresh());
+  }
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
+  onunload(): void { this.mounts.destroy(); }
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+  async saveSettings(): Promise<void> {
+    await this.saveData(this.settings);
+    this.configResolver.update(this.settings);
+    this.options.clear();
+    this.refresh();
+  }
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			},
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (
-				editor: Editor,
-				_ctx: MarkdownView | MarkdownFileInfo,
-			) => {
-				editor.replaceSelection('Sample editor command');
-			},
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+  normalizeSettings(input: unknown): PluginSettings {
+    return normalizeSettings(input);
+  }
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			},
-		});
+  getDiagnostics(): Record<string, unknown> {
+    return {
+      pluginVersion: this.manifest.version,
+      markdownViews: this.app.workspace.getLeavesOfType("markdown").length,
+      ...this.mounts.getDiagnostics(),
+      optionCacheEntries: this.options.getCacheSize(),
+      basesCacheEntries: this.basesCache.getSize(),
+      defaultPanels: this.settings.defaultConfig.panels.length,
+      folderRules: this.settings.folderRules.length
+    };
+  }
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+  async copyDiagnostics(): Promise<void> {
+    const text = JSON.stringify(this.getDiagnostics(), null, 2);
+    try {
+      await window.navigator.clipboard.writeText(text);
+      new Notice("Property Panels diagnostics copied.");
+    } catch {
+      console.info("[Property Panels] Diagnostics", text);
+      new Notice("Clipboard unavailable. Diagnostics were written to the developer console.");
+    }
+  }
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(activeDocument, 'click', (_evt: MouseEvent) => {
-			new Notice('Click');
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000),
-		);
-	}
-
-	onunload() {}
-
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<MyPluginSettings>,
-		);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
+  private refresh(): void {
+    window.setTimeout(() => {
+      const views = this.app.workspace.getLeavesOfType("markdown")
+        .map((leaf) => leaf.view)
+        .filter((view): view is MarkdownView => view instanceof MarkdownView);
+      this.mounts.refreshAll(views);
+    });
+  }
 }
