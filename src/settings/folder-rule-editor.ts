@@ -42,7 +42,10 @@ export function renderFolderRuleEditor(parent: HTMLElement, plugin: PropertyPane
     new Setting(grid).setName("Name").addText((text) => text.setValue(rule.name).onChange(async (value) => { rule.name = value; await plugin.saveSettings(); }));
     new Setting(grid).setName("Folder path").setDesc("Start typing to select a vault folder. Use an empty path for the vault root.").addText((text) => {
       text.setValue(rule.path).setPlaceholder("Knowledge/tools").onChange(async (value) => { rule.path = normalizePath(value); await plugin.saveSettings(); });
-      attachFolderSuggest(text.inputEl);
+      attachFolderSuggest(text.inputEl, (path) => {
+        rule.path = normalizePath(path);
+        void plugin.saveSettings();
+      });
     });
     new Setting(grid).setName("Enabled").addToggle((toggle) => toggle.setValue(rule.enabled).onChange(async (value) => { rule.enabled = value; await plugin.saveSettings(); }));
     new Setting(grid).setName("Match").addDropdown((dropdown) => dropdown.addOptions({ "folder-only": "Folder only", "folder-and-children": "Folder and children" }).setValue(rule.matchMode).onChange(async (value) => { rule.matchMode = value as FolderRule["matchMode"]; await plugin.saveSettings(); }));

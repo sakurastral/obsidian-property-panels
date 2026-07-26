@@ -3,6 +3,21 @@ export function nextOptionIndex(current: number, length: number, key: "ArrowDown
   return key === "ArrowDown" ? (current + 1) % length : (current - 1 + length) % length;
 }
 
+export type MultiSelectKeyboardResult =
+  | { type: "navigate"; index: number }
+  | { type: "select"; index: number }
+  | { type: "clear-query" }
+  | { type: "none" };
+
+export function multiSelectKeyboardResult(key: string, current: number, length: number): MultiSelectKeyboardResult {
+  if ((key === "ArrowDown" || key === "ArrowUp") && length > 0) {
+    return { type: "navigate", index: nextOptionIndex(current, length, key) };
+  }
+  if (key === "Enter" && current >= 0 && current < length) return { type: "select", index: current };
+  if (key === "Escape") return { type: "clear-query" };
+  return { type: "none" };
+}
+
 export type RatingKeyboardResult = { type: "select"; value: number } | { type: "clear" } | { type: "none" };
 
 export function ratingKeyboardResult(key: string, rating: number, max: number, allowClear: boolean): RatingKeyboardResult {

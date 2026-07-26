@@ -1,12 +1,12 @@
 import { AbstractInputSuggest, TFolder, type App } from "obsidian";
 
-export type FolderSuggestAttacher = (input: HTMLInputElement) => void;
+export type FolderSuggestAttacher = (input: HTMLInputElement, onSelect: (path: string) => void) => void;
 
 /** Inline Vault folder suggestions for settings text inputs. */
 export class FolderPathSuggest extends AbstractInputSuggest<TFolder> {
   private readonly input: HTMLInputElement;
 
-  constructor(app: App, input: HTMLInputElement) {
+  constructor(app: App, input: HTMLInputElement, private readonly selectPath: (path: string) => void) {
     super(app, input);
     this.input = input;
     this.limit = 100;
@@ -25,9 +25,9 @@ export class FolderPathSuggest extends AbstractInputSuggest<TFolder> {
   }
 
   selectSuggestion(folder: TFolder): void {
-    this.setValue(folder.isRoot() ? "" : folder.path);
-    this.input.dispatchEvent(new Event("input", { bubbles: true }));
-    this.input.dispatchEvent(new Event("change", { bubbles: true }));
+    const path = folder.isRoot() ? "" : folder.path;
+    this.setValue(path);
+    this.selectPath(path);
     this.close();
   }
 }

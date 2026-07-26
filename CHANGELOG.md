@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+
+- Prevented Backspace in an empty Multi-select search field from removing the last selected value.
+- Fixed folder option sources so selecting or editing a folder reloads matching notes, including optional subfolders.
+- Rendered wikilink option values without brackets and made selected wikilinks openable as Obsidian internal links.
+
 ## 0.5.0
 
 - Added theme-aware Style Settings presets using official Obsidian CSS variables.

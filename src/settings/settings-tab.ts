@@ -46,8 +46,8 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     super.hide();
   }
 
-  private readonly attachFolderSuggest = (input: HTMLInputElement): void => {
-    const suggest = new FolderPathSuggest(this.app, input);
+  private readonly attachFolderSuggest = (input: HTMLInputElement, onSelect: (path: string) => void): void => {
+    const suggest = new FolderPathSuggest(this.app, input, onSelect);
     this.folderSuggests.add(suggest);
     input.placeholder ||= "Start typing a vault folder…";
   };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { optionSourceDependsOnPath } from "../src/options/option-dependency";
+import { fileBelongsToFolder, optionSourceDependsOnPath, optionSourceKey } from "../src/options/option-dependency";
 import type { OptionSourceConfig } from "../src/types";
 
 describe("option source invalidation", () => {
@@ -21,5 +21,19 @@ describe("option source invalidation", () => {
   it("does not invalidate static or Bases sources for vault file changes", () => {
     expect(optionSourceDependsOnPath({ type: "static", options: [] }, "Note.md")).toBe(false);
     expect(optionSourceDependsOnPath({ type: "bases", path: "cache" }, "Note.md")).toBe(false);
+  });
+
+  it("reloads options after an in-place folder source edit", () => {
+    const source: OptionSourceConfig = { type: "folder", path: "Inbox", recursive: false, value: "basename", sort: true };
+    const before = optionSourceKey(source);
+    source.path = "Nexus/Categories/Other";
+    expect(optionSourceKey(source)).not.toBe(before);
+  });
+
+  it("matches folder files consistently for direct and recursive sources", () => {
+    expect(fileBelongsToFolder("Nexus/Categories/Other/AI Agent.md", "Nexus/Categories/Other", false)).toBe(true);
+    expect(fileBelongsToFolder("Nexus/Categories/Other/Tools/Agent.md", "Nexus/Categories/Other", false)).toBe(false);
+    expect(fileBelongsToFolder("Nexus/Categories/Other/Tools/Agent.md", "Nexus\\Categories\\Other", true)).toBe(true);
+    expect(fileBelongsToFolder("Nexus/Categories/Elsewhere/Agent.md", "Nexus/Categories/Other", true)).toBe(false);
   });
 });

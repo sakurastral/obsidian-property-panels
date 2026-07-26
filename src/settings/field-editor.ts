@@ -109,7 +109,12 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
       .setDesc(source.type === "folder" ? "Start typing to select a folder from this Vault." : source.type === "bases" ? "Must match the cache key configured in the Property Panels Options Bases view." : "")
       .addText((text) => {
         text.setValue(source.path).onChange(async (value) => { source.path = value.trim(); await plugin.saveSettings(); });
-        if (source.type === "folder") attachFolderSuggest(text.inputEl);
+        if (source.type === "folder") {
+          attachFolderSuggest(text.inputEl, (path) => {
+            source.path = path;
+            void plugin.saveSettings();
+          });
+        }
       });
     if (source.type === "file-property") {
       new Setting(advanced).setName("Property").addText((text) => text.setValue(source.property).onChange(async (value) => { source.property = value.trim(); await plugin.saveSettings(); }));

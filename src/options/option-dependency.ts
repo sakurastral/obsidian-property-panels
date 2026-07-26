@@ -1,5 +1,17 @@
 import type { OptionSourceConfig } from "../types";
 
+export function optionSourceKey(source: OptionSourceConfig | undefined): string {
+  return JSON.stringify(source ?? null);
+}
+
+export function fileBelongsToFolder(filePath: string, folderPath: string, recursive: boolean): boolean {
+  const file = normalize(filePath);
+  const folder = normalize(folderPath);
+  if (folder && !file.startsWith(`${folder}/`)) return false;
+  const relative = folder ? file.slice(folder.length + 1) : file;
+  return relative !== "" && (recursive || !relative.includes("/"));
+}
+
 export function optionSourceDependsOnPath(source: OptionSourceConfig, changedPath: string): boolean {
   if (source.type === "static" || source.type === "bases") return false;
   const changed = normalize(changedPath);

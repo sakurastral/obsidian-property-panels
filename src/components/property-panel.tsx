@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, CSSProperties, KeyboardEvent } from "react";
-import type { TFile } from "obsidian";
+import type { ChangeEvent, CSSProperties, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import { Keymap, type TFile } from "obsidian";
 import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, PropertyValue } from "../types";
 import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
-import { nextOptionIndex, ratingKeyboardResult } from "./keyboard-navigation";
+import { optionSourceKey } from "../options/option-dependency";
+import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
+import { optionDisplayText, parseWikiLink } from "./wiki-link";
 
 interface Props {
   file: TFile; panel: PanelConfig; layout: LayoutConfig;
@@ -151,6 +153,7 @@ function OptionControl({ id, value, field, file, options, write }: ControlProps 
   const [items, setItems] = useState<OptionItem[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
+  const sourceKey = optionSourceKey(field.optionSource);
   useEffect(() => {
     let active = true;
     setStatus("loading");
@@ -164,41 +167,66 @@ function OptionControl({ id, value, field, file, options, write }: ControlProps 
       }
     });
     return () => { active = false; };
-  }, [field.optionSource, file, options]);
+  }, [sourceKey, file, options]);
   const selected = useMemo(() => Array.isArray(value) ? value.map(String) : value == null ? [] : [String(value)], [value]);
   const combined = uniqueOptions([...items, ...selected.map((item) => ({ value: item, label: item }))]);
-  if (field.type === "select") return <select id={id} value={selected[0] ?? ""} disabled={!field.editable || status === "loading"} onChange={(event) => write(event.target.value || null)}>
-    <option value="">{status === "loading" ? "Loading…" : status === "error" ? error : "—"}</option>
-    {combined.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-  </select>;
-  return <MultiSelect id={id} field={field} items={combined} selected={selected} status={status} error={error} write={write} />;
+  const selectedValue = selected[0] ?? "";
+  if (field.type === "select") return <div className="property-panels-select-control">
+    <select id={id} value={selectedValue} disabled={!field.editable || status === "loading"} onChange={(event) => write(event.target.value || null)}>
+      <option value="">{status === "loading" ? "Loading…" : status === "error" ? error : "—"}</option>
+      {combined.map((item) => <option key={item.value} value={item.value}>{optionLabel(item)}</option>)}
+    </select>
+    {parseWikiLink(selectedValue) && (
+      <WikiLinkValue value={selectedValue} sourcePath={file.path} options={options} compact />
+    )}
+  </div>;
+  return <MultiSelect id={id} field={field} file={file} options={options} items={combined} selected={selected} status={status} error={error} write={write} />;
 }
 
-function MultiSelect({ id, field, items, selected, status, error, write }: { id: string; field: PropertyFieldConfig; items: OptionItem[]; selected: string[]; status: string; error: string; write: (value: PropertyValue) => void }) {
+function MultiSelect({ id, field, file, options, items, selected, status, error, write }: {
+  id: string;
+  field: PropertyFieldConfig;
+  file: TFile;
+  options: OptionService;
+  items: OptionItem[];
+  selected: string[];
+  status: string;
+  error: string;
+  write: (value: PropertyValue) => void;
+}) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const input = useRef<HTMLInputElement | null>(null);
   const listId = `${id}-options`;
-  const filtered = items.filter((item) => !selected.includes(item.value) && item.label.toLowerCase().includes(query.toLowerCase()));
-  const custom = query.trim() && filtered.length === 0 && field.allowCustom ? { value: query.trim(), label: `Add “${query.trim()}”` } : null;
+  const normalizedQuery = query.toLowerCase();
+  const filtered = items.filter((item) => !selected.includes(item.value) && optionLabel(item).toLowerCase().includes(normalizedQuery));
+  const customValue = query.trim();
+  const custom = customValue && filtered.length === 0 && field.allowCustom
+    ? { value: customValue, label: `Add “${optionDisplayText(customValue)}”` }
+    : null;
   const available = custom ? [custom] : filtered;
   useEffect(() => setActiveIndex((index) => Math.min(index, Math.max(available.length - 1, 0))), [available.length]);
   const add = (item: string) => { if (item && !selected.includes(item)) write([...selected, item]); setQuery(""); setActiveIndex(0); input.current?.focus(); };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "ArrowDown" && available.length) {
-      event.preventDefault(); setActiveIndex((index) => nextOptionIndex(index, available.length, "ArrowDown"));
-    } else if (event.key === "ArrowUp" && available.length) {
-      event.preventDefault(); setActiveIndex((index) => nextOptionIndex(index, available.length, "ArrowUp"));
-    } else if (event.key === "Enter" && available[activeIndex]) {
-      event.preventDefault(); add(available[activeIndex].value);
-    } else if (event.key === "Escape") {
-      event.preventDefault(); setQuery(""); setActiveIndex(0);
-    } else if (event.key === "Backspace" && query === "" && selected.length) {
-      event.preventDefault(); write(selected.slice(0, -1));
+    const result = multiSelectKeyboardResult(event.key, activeIndex, available.length);
+    if (result.type === "none") return;
+    event.preventDefault();
+    if (result.type === "navigate") setActiveIndex(result.index);
+    else if (result.type === "select") {
+      const item = available[result.index];
+      if (item) add(item.value);
+    } else {
+      setQuery("");
+      setActiveIndex(0);
     }
   };
   return <div id={id} className="property-panels-multiselect">
-    <div className="property-panels-chips">{selected.map((item) => <span className="property-panels-chip" key={item}>{item}<button type="button" aria-label={`Remove ${item}`} disabled={!field.editable} onClick={() => write(selected.filter((value) => value !== item))}>×</button></span>)}</div>
+    <div className="property-panels-chips">{selected.map((item) => (
+      <span className="property-panels-chip" key={item}>
+        <WikiLinkValue value={item} sourcePath={file.path} options={options} />
+        <button type="button" aria-label={`Remove ${optionDisplayText(item)}`} disabled={!field.editable} onClick={() => write(selected.filter((value) => value !== item))}>×</button>
+      </span>
+    ))}</div>
     <input ref={input} type="search" value={query} disabled={!field.editable || status === "loading"} placeholder={status === "loading" ? "Loading…" : field.placeholder ?? "Search or add…"}
       role="combobox" aria-autocomplete="list" aria-expanded={Boolean(query)} aria-controls={listId}
       aria-activedescendant={query && available[activeIndex] ? `${listId}-${activeIndex}` : undefined}
@@ -209,12 +237,40 @@ function MultiSelect({ id, field, items, selected, status, error, write }: { id:
     {query && <div id={listId} className="property-panels-options" role="listbox">
       {available.map((item, index) => <div id={`${listId}-${index}`} role="option" aria-selected={activeIndex === index}
         className={activeIndex === index ? "is-active" : ""} key={item.value}
-        onMouseEnter={() => setActiveIndex(index)} onMouseDown={(event) => event.preventDefault()} onClick={() => add(item.value)}>{item.label}</div>)}
+        onMouseEnter={() => setActiveIndex(index)} onMouseDown={(event) => event.preventDefault()} onClick={() => add(item.value)}>{optionLabel(item)}</div>)}
       {available.length === 0 && <span>No options</span>}
     </div>}
   </div>;
 }
 
+function WikiLinkValue({ value, sourcePath, options, compact = false }: {
+  value: string;
+  sourcePath: string;
+  options: OptionService;
+  compact?: boolean;
+}): ReactNode {
+  const link = parseWikiLink(value);
+  if (!link) return value;
+  const open = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void options.openLink(link.target, sourcePath, Boolean(Keymap.isModEvent(event.nativeEvent)));
+  };
+  return (
+    <a
+      href={link.target}
+      className={`internal-link property-panels-wikilink${compact ? " property-panels-select-open" : ""}`}
+      data-href={link.target}
+      aria-label={compact ? `Open ${link.label}` : undefined}
+      title={compact ? `Open ${link.label}` : undefined}
+      onClick={open}
+    >
+      {compact ? "Open" : link.label}
+    </a>
+  );
+}
+
+const optionLabel = (item: OptionItem): string => optionDisplayText(item.label);
 const uniqueOptions = (items: OptionItem[]): OptionItem[] => [...new Map(items.map((item) => [item.value, item])).values()];
 const formatValue = (value: PropertyValue): string => Array.isArray(value) ? value.join(", ") : value == null ? "—" : String(value);
 const dateInputValue = (value: PropertyValue, type: "date" | "datetime"): string => {

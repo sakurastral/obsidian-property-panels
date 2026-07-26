@@ -1,7 +1,7 @@
 import { normalizePath, TFile, type App } from "obsidian";
 import type { OptionContext, OptionItem, OptionSourceConfig } from "../types";
 import type { BasesOptionCache } from "./bases-option-cache";
-import { optionSourceDependsOnPath } from "./option-dependency";
+import { fileBelongsToFolder, optionSourceDependsOnPath, optionSourceKey } from "./option-dependency";
 
 const unique = (items: OptionItem[]): OptionItem[] => {
   const seen = new Set<string>();
@@ -27,7 +27,7 @@ export class OptionService {
       if (!items) throw new Error(`No Bases results cached for “${source.path}”. Open a Base using the Property Panels Options view and configure the same cache key.`);
       return items;
     }
-    const key = JSON.stringify(source);
+    const key = optionSourceKey(source);
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.time < 30_000) return cached.items;
     const items = unique(await this.loadUncached(source, context));
@@ -38,13 +38,9 @@ export class OptionService {
   private async loadUncached(source: Exclude<OptionSourceConfig, { type: "bases" }>, _context: OptionContext): Promise<OptionItem[]> {
     if (source.type === "static") return source.options;
     if (source.type === "folder") {
-      const base = normalizePath(source.path).replace(/\/$/, "");
-      const excluded = new Set(source.exclude ?? []);
-      const files = this.app.vault.getMarkdownFiles().filter((file) => {
-        const relative = base ? file.path.slice(base.length + 1) : file.path;
-        const inside = base === "" || file.path.startsWith(`${base}/`);
-        return inside && (source.recursive || !relative.includes("/")) && !excluded.has(file.path);
-      });
+      const excluded = new Set((source.exclude ?? []).map((path) => normalizePath(path)));
+      const files = this.app.vault.getMarkdownFiles()
+        .filter((file) => fileBelongsToFolder(file.path, source.path, source.recursive) && !excluded.has(normalizePath(file.path)));
       const items = files.map((file) => {
         const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
         const labelValue = source.labelProperty && isRecord(frontmatter)
@@ -74,6 +70,10 @@ export class OptionService {
       const value = (match[1] ?? "").replace(/\s+<!--.*?-->\s*$/, "");
       return { value, label: value };
     });
+  }
+
+  openLink(linktext: string, sourcePath: string, newLeaf: boolean): Promise<void> {
+    return this.app.workspace.openLinkText(linktext, sourcePath, newLeaf);
   }
 }
 
