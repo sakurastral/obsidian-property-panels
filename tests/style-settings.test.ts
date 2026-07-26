@@ -35,4 +35,15 @@ describe("Style Settings definition", () => {
     const background = definition.settings.find((setting) => setting.id === "property-panels-background-choice");
     expect(background?.default).toBe("transparent");
   });
+
+  it("offers official Obsidian typography variables and a custom field value size", () => {
+    const size = definition.settings.find((setting) => setting.id === "property-panels-field-value-size-choice");
+    const values = (size?.options ?? []).map((option) => typeof option === "string" ? option : option.value);
+    expect(size?.default).toBe("var(--font-text-size)");
+    expect(values).toContain("var(--font-smallest)");
+    expect(values).toContain("var(--font-smaller)");
+    expect(values).toContain("var(--font-small)");
+    expect(values).toContain("var(--font-ui-small)");
+    expect(values).toContain("var(--property-panels-field-value-size-custom)");
+  });
 });

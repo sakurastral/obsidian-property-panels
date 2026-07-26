@@ -8,6 +8,7 @@ export type PropertyFieldType =
   | "text" | "textarea" | "number" | "toggle" | "select"
   | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly";
 export type LabelDisplay = "visible" | "icon-only" | "hidden";
+export type LongTextDisplay = "wrap" | "truncate";
 export type FolderMatchMode = "folder-only" | "folder-and-children";
 
 export interface OptionItem { value: string; label: string; icon?: string }
@@ -15,7 +16,7 @@ export type OptionSourceConfig =
   | { type: "static"; options: OptionItem[] }
   | { type: "file-property"; path: string; property: string }
   | { type: "markdown-list"; path: string; heading?: string }
-  | { type: "folder"; path: string; recursive: boolean; value: "path" | "basename"; labelProperty?: string; exclude?: string[]; sort: boolean }
+  | { type: "folder"; path: string; recursive: boolean; value: "path" | "basename"; wikilink: boolean; labelProperty?: string; exclude?: string[]; sort: boolean }
   | { type: "bases"; path: string };
 
 export interface ProgressConfig {
@@ -27,6 +28,7 @@ export interface NumberConfig { min?: number; max?: number; step?: number }
 export interface PropertyFieldConfig {
   id: string; property: string; type: PropertyFieldType;
   label?: string; labelDisplay: LabelDisplay; editable: boolean; visible: boolean;
+  longText: LongTextDisplay; columnSpan: number;
   placeholder?: string; allowCustom?: boolean; optionSource?: OptionSourceConfig;
   progress?: ProgressConfig; rating?: RatingConfig; number?: NumberConfig;
 }

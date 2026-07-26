@@ -47,20 +47,28 @@ export class PositionResolver {
 
   place(container: HTMLElement, placement: Placement): void {
     if (this.isPlaced(container, placement)) return;
-    if (placement.where === "prepend") placement.parent.prepend(container);
+    if (placement.where === "prepend") {
+      const lastPanel = endOfPanelRun(placement.parent.firstElementChild, "nextElementSibling");
+      if (lastPanel) lastPanel.after(container);
+      else placement.parent.prepend(container);
+    }
     else if (placement.where === "append") placement.parent.append(container);
-    else if (placement.reference) placement.reference[placement.where](container);
+    else if (placement.reference && placement.where === "after") {
+      const lastPanel = endOfPanelRun(placement.reference.nextElementSibling, "nextElementSibling");
+      (lastPanel ?? placement.reference).after(container);
+    }
+    else if (placement.reference) placement.reference.before(container);
     else placement.parent.append(container);
   }
 
   private isPlaced(container: HTMLElement, placement: Placement): boolean {
     if (container.parentElement !== placement.parent) return false;
-    if (placement.where === "prepend") return placement.parent.firstElementChild === container;
-    if (placement.where === "append") return placement.parent.lastElementChild === container;
+    if (placement.where === "prepend") return isInPanelRun(placement.parent.firstElementChild, container, "nextElementSibling");
+    if (placement.where === "append") return isInPanelRun(placement.parent.lastElementChild, container, "previousElementSibling");
     if (!placement.reference) return false;
     return placement.where === "before"
-      ? placement.reference.previousElementSibling === container
-      : placement.reference.nextElementSibling === container;
+      ? isInPanelRun(placement.reference.previousElementSibling, container, "previousElementSibling")
+      : isInPanelRun(placement.reference.nextElementSibling, container, "nextElementSibling");
   }
 
   private find(root: HTMLElement, selectors: readonly string[]): HTMLElement | null {
@@ -70,4 +78,25 @@ export class PositionResolver {
     }
     return null;
   }
+}
+
+type SiblingDirection = "nextElementSibling" | "previousElementSibling";
+
+export function isInPanelRun(start: Element | null, container: HTMLElement, direction: SiblingDirection): boolean {
+  let current = start;
+  while (current?.matches(".property-panels-root")) {
+    if (current === container) return true;
+    current = current[direction];
+  }
+  return false;
+}
+
+function endOfPanelRun(start: Element | null, direction: SiblingDirection): Element | null {
+  let current = start;
+  let last: Element | null = null;
+  while (current?.matches(".property-panels-root")) {
+    last = current;
+    current = current[direction];
+  }
+  return last;
 }

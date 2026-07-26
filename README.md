@@ -15,7 +15,7 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.5.0 includes:
+Version 0.6.0 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
@@ -39,8 +39,12 @@ Version 0.5.0 includes:
 - Theme-aware Style Settings color presets backed by Obsidian CSS variables, plus custom light/dark colors.
 - Panel background, border, title, label, readonly value, rating, progress, and chip appearance controls.
 - Settings-page rerenders that preserve scroll position and expanded editor sections.
+- Clickable wikilinks, HTTP(S) URLs, and Markdown links in selected or readonly values.
+- Per-field long-value display modes for break-word wrapping or single-line truncation.
+- Per-field column spans with panel-column clamping and a single-column mobile fallback.
+- Field value font-size presets using official Obsidian typography variables or a custom size.
 
-Version 0.5.0 requires Obsidian 1.10.0 or newer because the experimental integration uses the public Bases View API.
+Version 0.6.0 requires Obsidian 1.10.0 or newer because the experimental integration uses the public Bases View API.
 
 ## Install for testing
 
@@ -80,6 +84,7 @@ The settings page starts with a `description` textarea after Properties. Most co
   "path": "Knowledge",
   "recursive": true,
   "value": "path",
+  "wikilink": true,
   "labelProperty": "title",
   "exclude": [],
   "sort": true
@@ -87,6 +92,10 @@ The settings page starts with a `description` textarea after Properties. Most co
 ```
 
 Date fields store `YYYY-MM-DD`. Datetime fields use the local HTML datetime format, such as `2026-07-25T15:30`. They are written as frontmatter strings and do not add a timezone automatically.
+
+Selected and readonly values recognize `[[Note]]`, `https://example.com`, and `[Label](https://example.com)` link formats. Markdown links with a Vault path, such as `[Welcome](Notes/Welcome)`, open as internal links. Each field also has a **Long value display** setting: **Wrap long words** uses break-word wrapping, while **Truncate with ellipsis** keeps the value on one line and exposes the full source value as a tooltip.
+
+Each field has a **Column span** setting from 1 to 12. In a three-column panel, a span of `2` behaves like Tailwind's `col-span-2`. A span larger than the active panel column count is clamped to the available columns, and narrow screens return every field to one column.
 
 ## Experimental Bases option source
 
@@ -129,7 +138,7 @@ These selectors may require maintenance after an Obsidian update.
 
 ## Keyboard controls
 
-- Multi-select: `Arrow Up`/`Arrow Down` changes the active option, `Enter` selects, `Escape` closes the list, and `Backspace` removes the final chip when the search is empty.
+- Multi-select: `Arrow Up`/`Arrow Down` changes the active option, `Enter` selects, and `Escape` closes the list. `Backspace` only edits the search text and never removes an existing chip.
 - Rating: Arrow keys move and select, `Home` selects the first rating, `End` selects the maximum, and `Delete`/`Backspace` clears when clearing is enabled.
 
 ## Diagnostics and configuration backup
@@ -147,6 +156,7 @@ Property Panels works without the Style Settings community plugin. If Style Sett
 - Active and inactive Rating color
 - Progress control and Multi-select chip color
 - Border width/style, radius, panel padding, and Rating size
+- Field value font size using official Obsidian typography variables or a custom size
 
 Each color dropdown offers official Obsidian variables such as `--background-primary`, `--background-secondary`, `--interactive-accent`, `--color-accent`, text variables, and semantic colors. These follow the active theme. Selecting **Custom color** uses separate light and dark color pickers instead.
 

@@ -37,7 +37,7 @@ export const sourceForType = (type: OptionSourceConfig["type"]): OptionSourceCon
     case "static": return { type, options: [] };
     case "file-property": return { type, path: "", property: "" };
     case "markdown-list": return { type, path: "" };
-    case "folder": return { type, path: "", recursive: false, value: "basename", sort: true };
+    case "folder": return { type, path: "", recursive: false, value: "basename", wikilink: true, sort: true };
     case "bases": return { type, path: "" };
   }
 };

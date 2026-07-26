@@ -10,7 +10,7 @@ describe("option source invalidation", () => {
   });
 
   it("respects recursive and direct folder sources", () => {
-    const direct: OptionSourceConfig = { type: "folder", path: "Knowledge", recursive: false, value: "path", sort: true };
+    const direct: OptionSourceConfig = { type: "folder", path: "Knowledge", recursive: false, value: "path", wikilink: true, sort: true };
     const recursive: OptionSourceConfig = { ...direct, recursive: true };
     expect(optionSourceDependsOnPath(direct, "Knowledge/Note.md")).toBe(true);
     expect(optionSourceDependsOnPath(direct, "Knowledge/Tools/Note.md")).toBe(false);
@@ -24,7 +24,7 @@ describe("option source invalidation", () => {
   });
 
   it("reloads options after an in-place folder source edit", () => {
-    const source: OptionSourceConfig = { type: "folder", path: "Inbox", recursive: false, value: "basename", sort: true };
+    const source: OptionSourceConfig = { type: "folder", path: "Inbox", recursive: false, value: "basename", wikilink: true, sort: true };
     const before = optionSourceKey(source);
     source.path = "Nexus/Categories/Other";
     expect(optionSourceKey(source)).not.toBe(before);

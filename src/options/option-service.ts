@@ -2,6 +2,7 @@ import { normalizePath, TFile, type App } from "obsidian";
 import type { OptionContext, OptionItem, OptionSourceConfig } from "../types";
 import type { BasesOptionCache } from "./bases-option-cache";
 import { fileBelongsToFolder, optionSourceDependsOnPath, optionSourceKey } from "./option-dependency";
+import { folderOptionValue } from "./folder-option-value";
 
 const unique = (items: OptionItem[]): OptionItem[] => {
   const seen = new Set<string>();
@@ -47,7 +48,7 @@ export class OptionService {
           ? frontmatter[source.labelProperty]
           : undefined;
         return {
-          value: source.value === "path" ? file.path : file.basename,
+          value: folderOptionValue(file.path, file.basename, source.value, source.wikilink),
           label: optionText(labelValue) ?? file.basename
         };
       });

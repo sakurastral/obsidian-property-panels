@@ -1,10 +1,18 @@
 # Changelog
 
-## 0.5.1
+## 0.6.0
 
+- Added clickable HTTP(S) URLs and Markdown links alongside wikilinks in option chips and readonly fields.
+- Added per-field long-value display settings for break-word wrapping or single-line truncation.
+- Fixed repeated panel repositioning that caused inputs to lose focus when multiple panels shared an insertion point.
 - Prevented Backspace in an empty Multi-select search field from removing the last selected value.
 - Fixed folder option sources so selecting or editing a folder reloads matching notes, including optional subfolders.
+- Added a folder-source setting that stores selected notes as wikilinks by default.
 - Rendered wikilink option values without brackets and made selected wikilinks openable as Obsidian internal links.
+- Added theme-aware field value font-size presets using official Obsidian typography variables and a custom size control.
+- Removed the unused panel header spacing when a non-collapsible panel has no name.
+- Added a per-field Column span setting with panel-column clamping and a single-column mobile fallback.
+- Preserved intentionally blank panel names after settings reload.
 
 ## 0.5.0
 

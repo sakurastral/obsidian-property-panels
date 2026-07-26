@@ -1,5 +1,5 @@
 import type {
-  BasePanelConfig, FolderRule, FolderRuleConfig, LabelDisplay, LayoutConfig,
+  BasePanelConfig, FolderRule, FolderRuleConfig, LabelDisplay, LayoutConfig, LongTextDisplay,
   NumberConfig, OptionItem, OptionSourceConfig, PanelConfig, PanelPosition,
   PluginSettings, ProgressConfig, PropertyFieldConfig, PropertyFieldType, RatingConfig
 } from "../types";
@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "./defaults";
 const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly"];
 const POSITIONS: PanelPosition[] = ["before-properties", "after-properties", "before-content", "after-content", "before-linked-mentions", "after-linked-mentions"];
 const LABELS: LabelDisplay[] = ["visible", "icon-only", "hidden"];
+const LONG_TEXT_DISPLAYS: LongTextDisplay[] = ["wrap", "truncate"];
 const DENSITIES: LayoutConfig["density"][] = ["compact", "normal", "comfortable"];
 const LABEL_POSITIONS: LayoutConfig["labelPosition"][] = ["top", "left", "inline"];
 
@@ -39,7 +40,7 @@ function normalizePanel(input: unknown): PanelConfig {
   const cssClass = optionalString(source.cssClass);
   return {
     id: nonEmptyString(source.id, crypto.randomUUID()),
-    name: nonEmptyString(source.name, "Unnamed panel"),
+    name: string(source.name, "Unnamed panel"),
     enabled: boolean(source.enabled, true),
     position: enumValue(source.position, POSITIONS, "after-properties"),
     fields: array(source.fields).map(normalizeField),
@@ -66,6 +67,8 @@ function normalizeField(input: unknown): PropertyFieldConfig {
     labelDisplay: enumValue(source.labelDisplay, LABELS, "visible"),
     editable: type === "readonly" ? false : boolean(source.editable, true),
     visible: boolean(source.visible, true),
+    longText: enumValue(source.longText, LONG_TEXT_DISPLAYS, "wrap"),
+    columnSpan: clamp(Math.round(number(source.columnSpan, 1)), 1, 12),
     ...(label ? { label } : {}),
     ...(placeholder ? { placeholder } : {}),
     ...(typeof source.allowCustom === "boolean" ? { allowCustom: source.allowCustom } : {}),
@@ -139,7 +142,9 @@ function normalizeOptionSource(input: unknown): OptionSourceConfig | undefined {
       const exclude = array(input.exclude).filter((item): item is string => typeof item === "string");
       return {
         type: "folder", path: string(input.path, ""), recursive: boolean(input.recursive, false),
-        value: input.value === "path" ? "path" : "basename", sort: boolean(input.sort, true),
+        value: input.value === "path" ? "path" : "basename",
+        wikilink: boolean(input.wikilink, true),
+        sort: boolean(input.sort, true),
         ...(labelProperty ? { labelProperty } : {}), ...(exclude.length ? { exclude } : {})
       };
     }

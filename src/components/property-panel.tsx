@@ -5,8 +5,10 @@ import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, Proper
 import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
 import { optionSourceKey } from "../options/option-dependency";
+import { effectiveColumnSpan } from "./field-layout";
 import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
-import { optionDisplayText, parseWikiLink } from "./wiki-link";
+import { panelHeaderState } from "./panel-header";
+import { optionDisplayText, parseDisplayLink } from "./wiki-link";
 
 interface Props {
   file: TFile; panel: PanelConfig; layout: LayoutConfig;
@@ -22,20 +24,23 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
     "--property-panels-columns": String(effective.columns),
     "--property-panels-field-gap": `${effective.fieldGap ?? 10}px`
   } as CSSProperties;
+  const header = panelHeaderState(panel.name, panel.collapsible);
   return (
     <section className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
-      <header className="property-panels-header">
-        <span className="property-panels-title">{panel.name}</span>
-        {panel.collapsible && (
-          <button className="property-panels-collapse" type="button" aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)}>
-            {collapsed ? "Show" : "Hide"}
-          </button>
-        )}
-      </header>
+      {header.visible && (
+        <header className={`property-panels-header${header.title === "" ? " is-titleless" : ""}`}>
+          {header.title !== "" && <span className="property-panels-title">{header.title}</span>}
+          {panel.collapsible && (
+            <button className="property-panels-collapse" type="button" aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)}>
+              {collapsed ? "Show" : "Hide"}
+            </button>
+          )}
+        </header>
+      )}
       {!collapsed && (
         <div className={`property-panels-grid property-panels-label-${effective.labelPosition}`}>
           {panel.fields.filter((field) => field.visible).map((field) => (
-            <Field key={field.id} field={field} file={file} repository={repository} options={options} saveDelay={saveDelay} revision={revision} />
+            <Field key={field.id} field={field} columnCount={effective.columns} file={file} repository={repository} options={options} saveDelay={saveDelay} revision={revision} />
           ))}
         </div>
       )}
@@ -45,28 +50,31 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
 
 interface FieldProps {
   field: PropertyFieldConfig; file: TFile; repository: PropertyRepository;
-  options: OptionService; saveDelay: number; revision: number;
+  options: OptionService; saveDelay: number; revision: number; columnCount: number;
 }
 
-function Field({ field, file, repository, options, saveDelay, revision }: FieldProps) {
+function Field({ field, file, repository, options, saveDelay, revision, columnCount }: FieldProps) {
   const id = useId();
   const label = field.label || field.property;
   const value = repository.read(file, field.property);
   const labelClass = field.labelDisplay === "hidden" ? "property-panels-visually-hidden" : field.labelDisplay === "icon-only" ? "property-panels-label-icon" : "";
+  const style = {
+    "--property-panels-field-column-span": String(effectiveColumnSpan(field.columnSpan, columnCount))
+  } as CSSProperties;
   return (
-    <div className={`property-panels-field property-panels-field-${field.type}`}>
+    <div className={`property-panels-field property-panels-field-${field.type} property-panels-long-${field.longText}`} style={style}>
       <label htmlFor={id} className={labelClass} title={field.labelDisplay === "icon-only" ? label : undefined}>{label}</label>
       <FieldControl id={id} field={field} file={file} value={value} repository={repository} options={options} saveDelay={saveDelay} revision={revision} />
     </div>
   );
 }
 
-interface ControlProps extends FieldProps { id: string; value: PropertyValue }
+interface ControlProps extends Omit<FieldProps, "columnCount"> { id: string; value: PropertyValue }
 
 function FieldControl(props: ControlProps) {
   const { field, value, repository, file, id } = props;
   const write = useCallback((next: PropertyValue) => void repository.write(file, field.property, next), [repository, file, field.property]);
-  if (field.type === "readonly") return <output id={id} className="property-panels-readonly">{formatValue(value)}</output>;
+  if (field.type === "readonly") return <ReadonlyControl id={id} value={value} file={file} options={props.options} />;
   if (field.type === "toggle") return <input id={id} type="checkbox" checked={Boolean(value)} disabled={!field.editable} onChange={(event) => write(event.target.checked)} />;
   if (field.type === "number") return (
     <input id={id} type="number" value={typeof value === "number" ? value : ""} disabled={!field.editable}
@@ -86,6 +94,24 @@ function FieldControl(props: ControlProps) {
   if (field.type === "rating") return <RatingControl {...props} write={write} />;
   if (field.type === "select" || field.type === "multi-select") return <OptionControl {...props} write={write} />;
   return <TextControl {...props} write={write} multiline={field.type === "textarea"} />;
+}
+
+function ReadonlyControl({ id, value, file, options }: { id: string; value: PropertyValue; file: TFile; options: OptionService }) {
+  if (value == null || (Array.isArray(value) && value.length === 0)) return <output id={id} className="property-panels-readonly">—</output>;
+  if (Array.isArray(value)) return (
+    <output id={id} className="property-panels-readonly property-panels-chips">
+      {value.map((item, index) => (
+        <span className="property-panels-chip" key={`${item}:${index}`}>
+          <LinkedValue value={item} sourcePath={file.path} options={options} />
+        </span>
+      ))}
+    </output>
+  );
+  return (
+    <output id={id} className="property-panels-readonly">
+      <LinkedValue value={String(value)} sourcePath={file.path} options={options} />
+    </output>
+  );
 }
 
 function TextControl({ id, value, field, file, repository, saveDelay, revision, write, multiline }: ControlProps & { write: (value: PropertyValue) => void; multiline: boolean }) {
@@ -176,8 +202,8 @@ function OptionControl({ id, value, field, file, options, write }: ControlProps 
       <option value="">{status === "loading" ? "Loading…" : status === "error" ? error : "—"}</option>
       {combined.map((item) => <option key={item.value} value={item.value}>{optionLabel(item)}</option>)}
     </select>
-    {parseWikiLink(selectedValue) && (
-      <WikiLinkValue value={selectedValue} sourcePath={file.path} options={options} compact />
+    {parseDisplayLink(selectedValue) && (
+      <LinkedValue value={selectedValue} sourcePath={file.path} options={options} compact />
     )}
   </div>;
   return <MultiSelect id={id} field={field} file={file} options={options} items={combined} selected={selected} status={status} error={error} write={write} />;
@@ -223,7 +249,7 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
   return <div id={id} className="property-panels-multiselect">
     <div className="property-panels-chips">{selected.map((item) => (
       <span className="property-panels-chip" key={item}>
-        <WikiLinkValue value={item} sourcePath={file.path} options={options} />
+        <LinkedValue value={item} sourcePath={file.path} options={options} />
         <button type="button" aria-label={`Remove ${optionDisplayText(item)}`} disabled={!field.editable} onClick={() => write(selected.filter((value) => value !== item))}>×</button>
       </span>
     ))}</div>
@@ -243,26 +269,30 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
   </div>;
 }
 
-function WikiLinkValue({ value, sourcePath, options, compact = false }: {
+function LinkedValue({ value, sourcePath, options, compact = false }: {
   value: string;
   sourcePath: string;
   options: OptionService;
   compact?: boolean;
 }): ReactNode {
-  const link = parseWikiLink(value);
-  if (!link) return value;
+  const link = parseDisplayLink(value);
+  if (!link) return <span className="property-panels-value-text" title={value}>{value}</span>;
   const open = (event: ReactMouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
     event.stopPropagation();
-    void options.openLink(link.target, sourcePath, Boolean(Keymap.isModEvent(event.nativeEvent)));
+    if (link.kind === "internal") {
+      event.preventDefault();
+      void options.openLink(link.target, sourcePath, Boolean(Keymap.isModEvent(event.nativeEvent)));
+    }
   };
   return (
     <a
       href={link.target}
-      className={`internal-link property-panels-wikilink${compact ? " property-panels-select-open" : ""}`}
-      data-href={link.target}
+      className={`${link.kind === "internal" ? "internal-link" : "external-link"} property-panels-link property-panels-value-text${compact ? " property-panels-select-open" : ""}`}
+      data-href={link.kind === "internal" ? link.target : undefined}
+      target={link.kind === "external" ? "_blank" : undefined}
+      rel={link.kind === "external" ? "noopener noreferrer" : undefined}
       aria-label={compact ? `Open ${link.label}` : undefined}
-      title={compact ? `Open ${link.label}` : undefined}
+      title={compact ? `Open ${link.label}` : value}
       onClick={open}
     >
       {compact ? "Open" : link.label}
@@ -272,7 +302,6 @@ function WikiLinkValue({ value, sourcePath, options, compact = false }: {
 
 const optionLabel = (item: OptionItem): string => optionDisplayText(item.label);
 const uniqueOptions = (items: OptionItem[]): OptionItem[] => [...new Map(items.map((item) => [item.value, item])).values()];
-const formatValue = (value: PropertyValue): string => Array.isArray(value) ? value.join(", ") : value == null ? "—" : String(value);
 const dateInputValue = (value: PropertyValue, type: "date" | "datetime"): string => {
   if (typeof value !== "string") return "";
   if (type === "date") return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";

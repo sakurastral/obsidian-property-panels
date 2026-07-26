@@ -3,6 +3,7 @@ import type { PluginSettings, PropertyFieldConfig } from "../types";
 export const createField = (property = "description", type: PropertyFieldConfig["type"] = "textarea"): PropertyFieldConfig => ({
   id: crypto.randomUUID(), property, type, label: property,
   labelDisplay: "visible", editable: type !== "readonly", visible: true,
+  longText: "wrap", columnSpan: 1,
   allowCustom: true
 });
 

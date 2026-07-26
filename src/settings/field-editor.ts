@@ -46,6 +46,29 @@ export function renderFieldEditor(
       .setValue(field.labelDisplay).onChange(async (value) => { field.labelDisplay = value as PropertyFieldConfig["labelDisplay"]; await plugin.saveSettings(); }));
     new Setting(grid).setName("Visible").addToggle((toggle) => toggle.setValue(field.visible).onChange(async (value) => { field.visible = value; await plugin.saveSettings(); }));
     new Setting(grid).setName("Editable").addToggle((toggle) => toggle.setValue(field.editable).setDisabled(field.type === "readonly").onChange(async (value) => { field.editable = value; await plugin.saveSettings(); }));
+    new Setting(grid)
+      .setName("Column span")
+      .setDesc("Number of panel grid columns occupied. Limited by the panel's column count.")
+      .addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.min = "1";
+        text.inputEl.max = "12";
+        text.inputEl.step = "1";
+        text.setValue(String(field.columnSpan)).onChange(async (value) => {
+          const parsed = Number(value);
+          if (Number.isFinite(parsed)) {
+            field.columnSpan = Math.max(1, Math.min(12, Math.round(parsed)));
+            await plugin.saveSettings();
+          }
+        });
+      });
+    new Setting(grid).setName("Long value display").addDropdown((dropdown) => dropdown
+      .addOptions({ wrap: "Wrap long words", truncate: "Truncate with ellipsis" })
+      .setValue(field.longText)
+      .onChange(async (value) => {
+        field.longText = value as PropertyFieldConfig["longText"];
+        await plugin.saveSettings();
+      }));
     if (["text", "textarea", "select", "multi-select"].includes(field.type)) {
       new Setting(grid).setName("Placeholder").addText((text) => text.setValue(field.placeholder ?? "").onChange(async (value) => {
         if (value) field.placeholder = value; else delete field.placeholder;
@@ -126,6 +149,8 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
     } else if (source.type === "folder") {
       new Setting(advanced).setName("Include subfolders").addToggle((toggle) => toggle.setValue(source.recursive).onChange(async (value) => { source.recursive = value; await plugin.saveSettings(); }));
       new Setting(advanced).setName("Value").addDropdown((dropdown) => dropdown.addOptions({ basename: "Basename", path: "Full path" }).setValue(source.value).onChange(async (value) => { source.value = value as "path" | "basename"; await plugin.saveSettings(); }));
+      new Setting(advanced).setName("Store as wikilink").setDesc("Write selected notes as [[note]] links while displaying their labels without brackets.")
+        .addToggle((toggle) => toggle.setValue(source.wikilink).onChange(async (value) => { source.wikilink = value; await plugin.saveSettings(); }));
       new Setting(advanced).setName("Label property").addText((text) => text.setValue(source.labelProperty ?? "").onChange(async (value) => {
         if (value.trim()) source.labelProperty = value.trim(); else delete source.labelProperty;
         await plugin.saveSettings();

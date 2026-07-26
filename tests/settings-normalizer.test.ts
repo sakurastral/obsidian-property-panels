@@ -30,6 +30,7 @@ describe("settings normalization", () => {
     });
     const panel = result.defaultConfig.panels[0]!;
     const field = panel.fields[0]!;
+    expect(panel.name).toBe("");
     expect(panel.position).toBe("after-properties");
     expect(field.property).toBe("property");
     expect(field.editable).toBe(false);
@@ -50,5 +51,40 @@ describe("settings normalization", () => {
       defaultConfig: { layout: {}, panels: [{ fields: [{ type: "date" }, { type: "datetime" }] }] }
     });
     expect(result.defaultConfig.panels[0]!.fields.map((field) => field.type)).toEqual(["date", "datetime"]);
+  });
+
+  it("normalizes field long-value display modes", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: {},
+        panels: [{ fields: [{ type: "text", longText: "truncate" }, { type: "text", longText: "invalid" }] }]
+      }
+    });
+    expect(result.defaultConfig.panels[0]!.fields.map((field) => field.longText)).toEqual(["truncate", "wrap"]);
+  });
+
+  it("defaults and clamps field column spans", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: {},
+        panels: [{ fields: [{ type: "text" }, { type: "text", columnSpan: 2 }, { type: "text", columnSpan: 99 }] }]
+      }
+    });
+    expect(result.defaultConfig.panels[0]!.fields.map((field) => field.columnSpan)).toEqual([1, 2, 12]);
+  });
+
+  it("migrates folder sources to wikilink values by default", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: {},
+        panels: [{ fields: [{ type: "select", optionSource: {
+          type: "folder", path: "Statuses", recursive: false, value: "basename", sort: true
+        } }] }]
+      }
+    });
+    expect(result.defaultConfig.panels[0]!.fields[0]!.optionSource).toMatchObject({
+      type: "folder",
+      wikilink: true
+    });
   });
 });
