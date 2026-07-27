@@ -8,11 +8,52 @@ describe("settings normalization", () => {
       defaultConfig: { panels: [], layout: { columns: 99, density: "invalid", labelPosition: "left", fieldGap: -5 } }
     });
     expect(result.behavior.textSaveDelay).toBe(100);
+    expect(result.behavior.showInSourceView).toBe(true);
     expect(result.defaultConfig.layout.columns).toBe(12);
     expect(result.defaultConfig.layout.density).toBe("normal");
     expect(result.defaultConfig.layout.labelPosition).toBe("left");
     expect(result.defaultConfig.layout.fieldGap).toBe(0);
     expect(result.defaultConfig.panels).toEqual([]);
+  });
+
+  it("preserves the new visibility preferences", () => {
+    const result = normalizeSettings({
+      behavior: { showInSourceView: false },
+      defaultConfig: {
+        layout: {},
+        panels: [{ showTitle: false, fields: [{ type: "text", showWhenEmpty: false }] }]
+      }
+    });
+    expect(result.behavior.showInSourceView).toBe(false);
+    expect(result.defaultConfig.panels[0]!.showTitle).toBe(false);
+    expect(result.defaultConfig.panels[0]!.fields[0]!.showWhenEmpty).toBe(false);
+  });
+
+  it("normalizes dividers as full-width non-editable fields", () => {
+    const result = normalizeSettings({
+      defaultConfig: { layout: {}, panels: [{ fields: [{ type: "divider", property: "ignored", columnSpan: 99 }] }] }
+    });
+    expect(result.defaultConfig.panels[0]!.fields[0]).toMatchObject({
+      type: "divider",
+      property: "ignored",
+      labelDisplay: "hidden",
+      editable: false,
+      columnSpan: 12
+    });
+  });
+
+  it("keeps placeholders only for supported text inputs", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: {},
+        panels: [{ fields: [
+          { type: "text", placeholder: "Text hint" },
+          { type: "multi-select", placeholder: "Unused hint" }
+        ] }]
+      }
+    });
+    expect(result.defaultConfig.panels[0]!.fields[0]!.placeholder).toBe("Text hint");
+    expect(result.defaultConfig.panels[0]!.fields[1]!.placeholder).toBeUndefined();
   });
 
   it("normalizes panels, readonly fields, sources, and paths", () => {

@@ -15,11 +15,11 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.6.0 includes:
+Version 0.7.0 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
-- Text, textarea, number, toggle, select, multi-select, date, datetime, progress, rating, and readonly fields.
+- Text, textarea, number, toggle, select, multi-select, date, datetime, progress, rating, readonly, and horizontal-divider fields.
 - Static, frontmatter-file, Markdown-list, and folder option sources.
 - Default configuration and folder rules with direct-child/descendant matching and extend/replace inheritance.
 - Debounced text writes through `app.fileManager.processFrontMatter()`.
@@ -43,8 +43,12 @@ Version 0.6.0 includes:
 - Per-field long-value display modes for break-word wrapping or single-line truncation.
 - Per-field column spans with panel-column clamping and a single-column mobile fallback.
 - Field value font-size presets using official Obsidian typography variables or a custom size.
+- Optional panel display in plain Source Mode while keeping Live Preview unaffected.
+- Per-panel title visibility and per-field empty-value visibility controls.
+- A theme-default or borderless field-input style exposed through Style Settings.
+- An empty initial configuration, so new installations begin without a predefined panel.
 
-Version 0.6.0 requires Obsidian 1.10.0 or newer because the experimental integration uses the public Bases View API.
+Version 0.7.0 requires Obsidian 1.10.0 or newer because the experimental integration uses the public Bases View API.
 
 ## Install for testing
 
@@ -58,7 +62,7 @@ For BRAT, point it at a GitHub repository containing a release with those three 
 
 ## Example configuration
 
-The settings page starts with a `description` textarea after Properties. Most configuration is available in the visual editor. The advanced JSON editor remains available for bulk changes. Each panel contains `fields`; option sources use one of these shapes:
+New installations start without a predefined panel. Add a panel and its fields from the visual editor; the advanced JSON editor remains available for bulk changes. Each panel contains `fields`; option sources use one of these shapes:
 
 ```json
 {
@@ -157,6 +161,7 @@ Property Panels works without the Style Settings community plugin. If Style Sett
 - Progress control and Multi-select chip color
 - Border width/style, radius, panel padding, and Rating size
 - Field value font size using official Obsidian typography variables or a custom size
+- Theme-default or borderless field-input styling
 
 Each color dropdown offers official Obsidian variables such as `--background-primary`, `--background-secondary`, `--interactive-accent`, `--color-accent`, text variables, and semantic colors. These follow the active theme. Selecting **Custom color** uses separate light and dark color pickers instead.
 

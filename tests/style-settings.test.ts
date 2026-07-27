@@ -46,4 +46,11 @@ describe("Style Settings definition", () => {
     expect(values).toContain("var(--font-ui-small)");
     expect(values).toContain("var(--property-panels-field-value-size-custom)");
   });
+
+  it("offers a borderless field-input style", () => {
+    const inputStyle = definition.settings.find((setting) => setting.id === "property-panels-field-input-style");
+    const values = (inputStyle?.options ?? []).map((option) => typeof option === "string" ? option : option.value);
+    expect(inputStyle?.default).toBe("property-panels-input-theme");
+    expect(values).toContain("property-panels-input-borderless");
+  });
 });

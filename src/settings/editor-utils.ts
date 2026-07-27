@@ -28,6 +28,7 @@ export const createPanel = (name = "New panel"): PanelConfig => ({
   enabled: true,
   position: "after-properties",
   fields: [],
+  showTitle: true,
   collapsible: false,
   defaultCollapsed: false
 });

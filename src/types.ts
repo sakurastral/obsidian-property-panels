@@ -6,7 +6,7 @@ export type PanelPosition =
   | "before-linked-mentions" | "after-linked-mentions";
 export type PropertyFieldType =
   | "text" | "textarea" | "number" | "toggle" | "select"
-  | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly";
+  | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly" | "divider";
 export type LabelDisplay = "visible" | "icon-only" | "hidden";
 export type LongTextDisplay = "wrap" | "truncate";
 export type FolderMatchMode = "folder-only" | "folder-and-children";
@@ -28,7 +28,7 @@ export interface NumberConfig { min?: number; max?: number; step?: number }
 export interface PropertyFieldConfig {
   id: string; property: string; type: PropertyFieldType;
   label?: string; labelDisplay: LabelDisplay; editable: boolean; visible: boolean;
-  longText: LongTextDisplay; columnSpan: number;
+  longText: LongTextDisplay; columnSpan: number; showWhenEmpty: boolean;
   placeholder?: string; allowCustom?: boolean; optionSource?: OptionSourceConfig;
   progress?: ProgressConfig; rating?: RatingConfig; number?: NumberConfig;
 }
@@ -39,7 +39,7 @@ export interface LayoutConfig {
 export interface PanelConfig {
   id: string; name: string; enabled: boolean; position: PanelPosition;
   fields: PropertyFieldConfig[]; layout?: Partial<LayoutConfig>;
-  collapsible: boolean; defaultCollapsed: boolean; cssClass?: string;
+  showTitle: boolean; collapsible: boolean; defaultCollapsed: boolean; cssClass?: string;
 }
 export interface BasePanelConfig { panels: PanelConfig[]; layout: LayoutConfig }
 export interface FolderRuleConfig { panels?: PanelConfig[]; layout?: Partial<LayoutConfig> }
@@ -49,7 +49,7 @@ export interface FolderRule {
   priority: number; config: FolderRuleConfig;
 }
 export interface BehaviorSettings {
-  textSaveDelay: number; deleteEmptyValues: boolean; debugLogging: boolean;
+  textSaveDelay: number; deleteEmptyValues: boolean; showInSourceView: boolean; debugLogging: boolean;
 }
 export interface PluginSettings {
   defaultConfig: BasePanelConfig; folderRules: FolderRule[]; behavior: BehaviorSettings;

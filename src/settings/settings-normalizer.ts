@@ -5,7 +5,7 @@ import type {
 } from "../types";
 import { DEFAULT_SETTINGS } from "./defaults";
 
-const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly"];
+const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "divider"];
 const POSITIONS: PanelPosition[] = ["before-properties", "after-properties", "before-content", "after-content", "before-linked-mentions", "after-linked-mentions"];
 const LABELS: LabelDisplay[] = ["visible", "icon-only", "hidden"];
 const LONG_TEXT_DISPLAYS: LongTextDisplay[] = ["wrap", "truncate"];
@@ -21,6 +21,7 @@ export function normalizeSettings(input: unknown): PluginSettings {
     behavior: {
       textSaveDelay: clamp(number(behavior.textSaveDelay, DEFAULT_SETTINGS.behavior.textSaveDelay), 100, 5000),
       deleteEmptyValues: boolean(behavior.deleteEmptyValues, DEFAULT_SETTINGS.behavior.deleteEmptyValues),
+      showInSourceView: boolean(behavior.showInSourceView, DEFAULT_SETTINGS.behavior.showInSourceView),
       debugLogging: boolean(behavior.debugLogging, DEFAULT_SETTINGS.behavior.debugLogging)
     }
   };
@@ -44,6 +45,7 @@ function normalizePanel(input: unknown): PanelConfig {
     enabled: boolean(source.enabled, true),
     position: enumValue(source.position, POSITIONS, "after-properties"),
     fields: array(source.fields).map(normalizeField),
+    showTitle: boolean(source.showTitle, true),
     collapsible: boolean(source.collapsible, false),
     defaultCollapsed: boolean(source.defaultCollapsed, false),
     ...(isRecord(rawLayout) ? { layout: normalizePartialLayout(rawLayout) } : {}),
@@ -54,22 +56,25 @@ function normalizePanel(input: unknown): PanelConfig {
 function normalizeField(input: unknown): PropertyFieldConfig {
   const source = record(input);
   const type = enumValue(source.type, FIELD_TYPES, "text");
+  const divider = type === "divider";
   const label = optionalString(source.label);
-  const placeholder = optionalString(source.placeholder);
+  const supportsPlaceholder = type === "text" || type === "textarea";
+  const placeholder = supportsPlaceholder ? optionalString(source.placeholder) : undefined;
   const optionSource = normalizeOptionSource(source.optionSource);
   const numberConfig = normalizeNumberConfig(source.number);
   const progress = normalizeProgress(source.progress);
   const rating = normalizeRating(source.rating);
   return {
     id: nonEmptyString(source.id, crypto.randomUUID()),
-    property: nonEmptyString(source.property, "property"),
+    property: divider ? string(source.property, "") : nonEmptyString(source.property, "property"),
     type,
-    labelDisplay: enumValue(source.labelDisplay, LABELS, "visible"),
-    editable: type === "readonly" ? false : boolean(source.editable, true),
+    labelDisplay: divider ? "hidden" : enumValue(source.labelDisplay, LABELS, "visible"),
+    editable: type === "readonly" || divider ? false : boolean(source.editable, true),
     visible: boolean(source.visible, true),
+    showWhenEmpty: boolean(source.showWhenEmpty, true),
     longText: enumValue(source.longText, LONG_TEXT_DISPLAYS, "wrap"),
-    columnSpan: clamp(Math.round(number(source.columnSpan, 1)), 1, 12),
-    ...(label ? { label } : {}),
+    columnSpan: clamp(Math.round(number(source.columnSpan, divider ? 12 : 1)), 1, 12),
+    ...(!divider && label ? { label } : {}),
     ...(placeholder ? { placeholder } : {}),
     ...(typeof source.allowCustom === "boolean" ? { allowCustom: source.allowCustom } : {}),
     ...(optionSource ? { optionSource } : {}),

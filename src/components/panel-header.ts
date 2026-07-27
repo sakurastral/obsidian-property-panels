@@ -3,8 +3,8 @@ export interface PanelHeaderState {
   visible: boolean;
 }
 
-export function panelHeaderState(name: string, collapsible: boolean): PanelHeaderState {
-  const title = name.trim();
+export function panelHeaderState(name: string, collapsible: boolean, showTitle: boolean): PanelHeaderState {
+  const title = showTitle ? name.trim() : "";
   return {
     title,
     visible: title !== "" || collapsible

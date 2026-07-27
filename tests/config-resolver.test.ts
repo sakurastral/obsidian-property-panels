@@ -20,12 +20,12 @@ describe("folder matching", () => {
 describe("config resolver", () => {
   it("applies parent before child and supports replace", () => {
     const settings: PluginSettings = {
-      behavior: { textSaveDelay: 500, deleteEmptyValues: true, debugLogging: false },
+      behavior: { textSaveDelay: 500, deleteEmptyValues: true, showInSourceView: true, debugLogging: false },
       defaultConfig: { layout: { columns: 1, density: "normal", labelPosition: "top" }, panels: [] },
       folderRules: [
         { ...rule("Knowledge", "folder-and-children"), config: { layout: { columns: 2 } } },
         { ...rule("Knowledge/Tools", "folder-and-children"), inheritance: "replace", config: {
-          panels: [{ id: "tools", name: "Tools", enabled: true, position: "after-properties", fields: [], collapsible: false, defaultCollapsed: false }]
+          panels: [{ id: "tools", name: "Tools", enabled: true, position: "after-properties", fields: [], showTitle: true, collapsible: false, defaultCollapsed: false }]
         } }
       ]
     };

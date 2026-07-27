@@ -5,6 +5,7 @@ import { PropertyPanel } from "../components/property-panel";
 import type { OptionService } from "../options/option-service";
 import { PositionResolver } from "../placement/position-resolver";
 import type { PropertyRepository } from "../properties/property-repository";
+import { shouldMountPanels } from "./view-visibility";
 
 interface MountedPanel { key: string; container: HTMLElement; root: Root; view: MarkdownView; panelId: string }
 interface ObservedView { observer: MutationObserver; timer?: number }
@@ -23,13 +24,19 @@ export class PanelMountManager {
     private readonly repository: PropertyRepository,
     private readonly options: OptionService,
     private readonly resolver: PositionResolver,
-    private readonly saveDelay: () => number
+    private readonly saveDelay: () => number,
+    private readonly showInSourceView: () => boolean
   ) {}
 
   refresh(view: MarkdownView): void {
     const file = view.file;
     if (!file) { this.unmountView(view); return; }
     this.observe(view);
+    const isLivePreview = view.containerEl.querySelector(".markdown-source-view")?.classList.contains("is-live-preview") ?? false;
+    if (!shouldMountPanels(view.getMode(), isLivePreview, this.showInSourceView())) {
+      this.unmountPanels(view);
+      return;
+    }
     const resolved = this.config.resolve(file.path);
     const activeKeys = new Set<string>();
     for (const panel of resolved.panels.filter((item) => item.enabled)) {
@@ -62,7 +69,7 @@ export class PanelMountManager {
     views.forEach((view) => this.refresh(view));
   }
   unmountView(view: MarkdownView): void {
-    for (const [key, item] of this.mounted) if (item.view === view) this.unmount(key);
+    this.unmountPanels(view);
     const observed = this.observed.get(view);
     if (observed) { observed.observer.disconnect(); window.clearTimeout(observed.timer); this.observed.delete(view); }
   }
@@ -94,6 +101,9 @@ export class PanelMountManager {
     const item = this.mounted.get(key);
     if (!item) return;
     item.root.unmount(); item.container.remove(); this.mounted.delete(key);
+  }
+  private unmountPanels(view: MarkdownView): void {
+    for (const [key, item] of this.mounted) if (item.view === view) this.unmount(key);
   }
   private key(view: MarkdownView, file: TFile, panelId: string): string {
     let viewId = this.viewIds.get(view);

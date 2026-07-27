@@ -34,7 +34,14 @@ export default class PropertyPanelsPlugin extends Plugin {
     const positionResolver = new PositionResolver((message) => {
       if (this.settings.behavior.debugLogging) console.debug(`[Property Panels] ${message}`);
     });
-    this.mounts = new PanelMountManager(this.configResolver, this.repository, this.options, positionResolver, () => this.settings.behavior.textSaveDelay);
+    this.mounts = new PanelMountManager(
+      this.configResolver,
+      this.repository,
+      this.options,
+      positionResolver,
+      () => this.settings.behavior.textSaveDelay,
+      () => this.settings.behavior.showInSourceView
+    );
     this.addSettingTab(new PropertyPanelsSettingTab(this.app, this));
     this.app.workspace.trigger("parse-style-settings");
     this.addCommand({

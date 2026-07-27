@@ -199,6 +199,18 @@ settings:
     max: 32
     step: 1
     format: px
+  - id: property-panels-field-input-style
+    title: Field input style
+    title.zh-TW: 欄位輸入框樣式
+    description: Use the active theme's controls or remove their border and background.
+    description.zh-TW: 使用目前主題的控制元件樣式，或移除輸入框的邊框與背景。
+    type: class-select
+    default: property-panels-input-theme
+    options:
+      - label: Theme default
+        value: property-panels-input-theme
+      - label: Borderless
+        value: property-panels-input-borderless
   - id: property-panels-control-colors
     title: Control colors
     title.zh-TW: 控制元件顏色
@@ -406,6 +418,22 @@ settings:
 .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) { width: 100%; }
 .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select, output, .property-panels-chip, .property-panels-options) {
   font-size: var(--property-panels-field-value-size-choice, var(--font-text-size));
+}
+.property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select):focus-visible {
+  outline: 1px solid var(--background-modifier-border-focus);
+  outline-offset: 1px;
+}
+.property-panels-field-divider { justify-content: center; }
+.property-panels-field-divider hr {
+  width: 100%;
+  margin: var(--size-2-2, 6px) 0;
+  border: 0;
+  border-top: 1px solid var(--background-modifier-border);
 }
 .property-panels-density-compact { padding: 8px; }
 .property-panels-density-compact .property-panels-grid { gap: 6px; }

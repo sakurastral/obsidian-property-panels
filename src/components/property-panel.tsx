@@ -6,6 +6,7 @@ import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
 import { optionSourceKey } from "../options/option-dependency";
 import { effectiveColumnSpan } from "./field-layout";
+import { shouldRenderField } from "./field-visibility";
 import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
 import { panelHeaderState } from "./panel-header";
 import { optionDisplayText, parseDisplayLink } from "./wiki-link";
@@ -24,7 +25,7 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
     "--property-panels-columns": String(effective.columns),
     "--property-panels-field-gap": `${effective.fieldGap ?? 10}px`
   } as CSSProperties;
-  const header = panelHeaderState(panel.name, panel.collapsible);
+  const header = panelHeaderState(panel.name, panel.collapsible, panel.showTitle);
   return (
     <section className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
       {header.visible && (
@@ -55,12 +56,16 @@ interface FieldProps {
 
 function Field({ field, file, repository, options, saveDelay, revision, columnCount }: FieldProps) {
   const id = useId();
-  const label = field.label || field.property;
-  const value = repository.read(file, field.property);
-  const labelClass = field.labelDisplay === "hidden" ? "property-panels-visually-hidden" : field.labelDisplay === "icon-only" ? "property-panels-label-icon" : "";
   const style = {
     "--property-panels-field-column-span": String(effectiveColumnSpan(field.columnSpan, columnCount))
   } as CSSProperties;
+  if (field.type === "divider") {
+    return <div className="property-panels-field property-panels-field-divider" style={style} role="separator"><hr /></div>;
+  }
+  const label = field.label || field.property;
+  const value = repository.read(file, field.property);
+  if (!shouldRenderField(field.type, field.showWhenEmpty, value)) return null;
+  const labelClass = field.labelDisplay === "hidden" ? "property-panels-visually-hidden" : field.labelDisplay === "icon-only" ? "property-panels-label-icon" : "";
   return (
     <div className={`property-panels-field property-panels-field-${field.type} property-panels-long-${field.longText}`} style={style}>
       <label htmlFor={id} className={labelClass} title={field.labelDisplay === "icon-only" ? label : undefined}>{label}</label>

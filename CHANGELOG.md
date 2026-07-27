@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+- Added a setting to hide panels in plain Source Mode while leaving Live Preview visible.
+- Added horizontal-divider fields with a full-width default span.
+- Added a Style Settings option for theme-default or borderless field inputs.
+- Added per-field control over visibility when the frontmatter value is empty.
+- Added per-panel control over panel-title visibility.
+- Limited placeholder controls and stored placeholder values to supported text field types.
+- Removed the predefined default panel so new installations start with an empty panel list.
+
 ## 0.6.0
 
 - Added clickable HTTP(S) URLs and Markdown links alongside wikilinks in option chips and readonly fields.

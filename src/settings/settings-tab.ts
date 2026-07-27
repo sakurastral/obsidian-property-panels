@@ -72,6 +72,10 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
       .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.deleteEmptyValues).onChange(async (value) => {
         this.plugin.settings.behavior.deleteEmptyValues = value; await this.plugin.saveSettings();
       }));
+    new Setting(section).setName("Show in source mode").setDesc("Display panels in plain Markdown source mode. Live preview is not affected.")
+      .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.showInSourceView).onChange(async (value) => {
+        this.plugin.settings.behavior.showInSourceView = value; await this.plugin.saveSettings();
+      }));
     new Setting(section).setName("Debug logging").setDesc("Log placement fallbacks to the developer console.")
       .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.debugLogging).onChange(async (value) => {
         this.plugin.settings.behavior.debugLogging = value; await this.plugin.saveSettings();
