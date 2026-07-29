@@ -46,7 +46,7 @@ export function renderPanelEditor(
 
     const grid = body.createDiv({ cls: "property-panels-editor-grid" });
     new Setting(grid).setName("Name").addText((text) => text.setValue(panel.name).onChange(async (value) => { panel.name = value; await plugin.saveSettings(); }));
-    new Setting(grid).setName("Panel ID").setDesc("Folder rules use this ID to replace an inherited panel.").addText((text) => text.setValue(panel.id).onChange(async (value) => {
+    new Setting(grid).setName("Panel ID").setDesc("Rules use this ID to replace an inherited panel.").addText((text) => text.setValue(panel.id).onChange(async (value) => {
       if (value.trim()) { panel.id = value.trim(); await plugin.saveSettings(); }
     }));
     new Setting(grid).setName("Enabled").addToggle((toggle) => toggle.setValue(panel.enabled).onChange(async (value) => { panel.enabled = value; await plugin.saveSettings(); }));
@@ -69,7 +69,7 @@ export function renderPanelEditor(
       await plugin.saveSettings();
       rerender();
     }));
-    renderFieldEditor(body, panel.fields, plugin, rerender, attachFolderSuggest);
+    renderFieldEditor(body, panel.fields, plugin, rerender, attachFolderSuggest, `${options.scope ?? "panels"}:panel:${panel.id}`);
   });
 }
 

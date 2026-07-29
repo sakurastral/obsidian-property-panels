@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ConfigResolver, matchesFolder } from "../src/config/config-resolver";
-import type { FolderRule, PluginSettings } from "../src/types";
+import { ConfigResolver, matchesFolder, matchesRule } from "../src/config/config-resolver";
+import type { PanelRule, PluginSettings, RuleMatchContext } from "../src/types";
 
-const rule = (path: string, matchMode: FolderRule["matchMode"]): FolderRule => ({
-  id: path || "root", name: path, path, enabled: true, matchMode,
+const rule = (value: string, matchMode: PanelRule["matchMode"], matchType: PanelRule["matchType"] = "folder"): PanelRule => ({
+  id: value || "root", name: value, matchType, value, enabled: true, matchMode,
   inheritance: "extend", priority: 0, config: {}
 });
 
@@ -17,12 +17,30 @@ describe("folder matching", () => {
   });
 });
 
+describe("metadata matching", () => {
+  const context: RuleMatchContext = {
+    path: "Knowledge/Tools/note.md",
+    tags: ["#project", "#writing/draft"],
+    links: ["Notes/Welcome", "People/Ada"]
+  };
+
+  it("matches tags with or without a leading hash", () => {
+    expect(matchesRule(context, rule("project", "folder-and-children", "tag"))).toBe(true);
+    expect(matchesRule(context, rule("#missing", "folder-and-children", "tag"))).toBe(false);
+  });
+
+  it("matches wikilink syntax, paths, and aliases", () => {
+    expect(matchesRule(context, rule("[[Notes/Welcome|Welcome]]", "folder-and-children", "wikilink"))).toBe(true);
+    expect(matchesRule(context, rule("[[Missing]]", "folder-and-children", "wikilink"))).toBe(false);
+  });
+});
+
 describe("config resolver", () => {
   it("applies parent before child and supports replace", () => {
     const settings: PluginSettings = {
       behavior: { textSaveDelay: 500, deleteEmptyValues: true, showInSourceView: true, debugLogging: false },
       defaultConfig: { layout: { columns: 1, density: "normal", labelPosition: "top" }, panels: [] },
-      folderRules: [
+      rules: [
         { ...rule("Knowledge", "folder-and-children"), config: { layout: { columns: 2 } } },
         { ...rule("Knowledge/Tools", "folder-and-children"), inheritance: "replace", config: {
           panels: [{ id: "tools", name: "Tools", enabled: true, position: "after-properties", fields: [], showTitle: true, collapsible: false, defaultCollapsed: false }]

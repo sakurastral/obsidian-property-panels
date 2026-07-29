@@ -18,9 +18,8 @@ describe("option source invalidation", () => {
     expect(optionSourceDependsOnPath(recursive, "Archive/Note.md")).toBe(false);
   });
 
-  it("does not invalidate static or Bases sources for vault file changes", () => {
+  it("does not invalidate static sources for vault file changes", () => {
     expect(optionSourceDependsOnPath({ type: "static", options: [] }, "Note.md")).toBe(false);
-    expect(optionSourceDependsOnPath({ type: "bases", path: "cache" }, "Note.md")).toBe(false);
   });
 
   it("reloads options after an in-place folder source edit", () => {

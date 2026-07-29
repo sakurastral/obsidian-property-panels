@@ -4,7 +4,7 @@ export const createField = (property = "description", type: PropertyFieldConfig[
   id: crypto.randomUUID(), property: type === "divider" ? "" : property, type,
   ...(type === "divider" ? {} : { label: property }),
   labelDisplay: type === "divider" ? "hidden" : "visible",
-  editable: type !== "readonly" && type !== "divider",
+  editable: type !== "readonly" && type !== "link" && type !== "divider",
   visible: true, showWhenEmpty: true,
   longText: "wrap", columnSpan: type === "divider" ? 12 : 1,
   allowCustom: true
@@ -15,6 +15,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     layout: { columns: 1, density: "normal", labelPosition: "top", fieldGap: 10, panelGap: 12 },
     panels: []
   },
-  folderRules: [],
-  behavior: { textSaveDelay: 500, deleteEmptyValues: true, showInSourceView: true, debugLogging: false }
+  rules: [],
+  behavior: { textSaveDelay: 500, deleteEmptyValues: false, showInSourceView: false, debugLogging: false }
 };

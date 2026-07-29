@@ -8,7 +8,8 @@ describe("settings normalization", () => {
       defaultConfig: { panels: [], layout: { columns: 99, density: "invalid", labelPosition: "left", fieldGap: -5 } }
     });
     expect(result.behavior.textSaveDelay).toBe(100);
-    expect(result.behavior.showInSourceView).toBe(true);
+    expect(result.behavior.showInSourceView).toBe(false);
+    expect(result.behavior.deleteEmptyValues).toBe(false);
     expect(result.defaultConfig.layout.columns).toBe(12);
     expect(result.defaultConfig.layout.density).toBe("normal");
     expect(result.defaultConfig.layout.labelPosition).toBe("left");
@@ -76,8 +77,19 @@ describe("settings normalization", () => {
     expect(field.property).toBe("property");
     expect(field.editable).toBe(false);
     expect(field.optionSource).toEqual({ type: "static", options: [{ value: "draft", label: "draft" }] });
-    expect(result.folderRules[0]!.path).toBe("Knowledge/Tools");
-    expect(result.folderRules[0]!.config.layout?.columns).toBe(1);
+    expect(result.rules[0]).toMatchObject({ matchType: "folder", value: "Knowledge/Tools" });
+    expect(result.rules[0]!.config.layout?.columns).toBe(1);
+  });
+
+  it("normalizes tag and wikilink rules", () => {
+    const result = normalizeSettings({
+      rules: [
+        { matchType: "tag", value: "#project" },
+        { matchType: "wikilink", value: "[[Notes/Welcome|Welcome]]" }
+      ]
+    });
+    expect(result.rules[0]).toMatchObject({ matchType: "tag", value: "project" });
+    expect(result.rules[1]).toMatchObject({ matchType: "wikilink", value: "Notes/Welcome" });
   });
 
   it("drops unknown option-source types", () => {
@@ -92,6 +104,16 @@ describe("settings normalization", () => {
       defaultConfig: { layout: {}, panels: [{ fields: [{ type: "date" }, { type: "datetime" }] }] }
     });
     expect(result.defaultConfig.panels[0]!.fields.map((field) => field.type)).toEqual(["date", "datetime"]);
+  });
+
+  it("accepts link fields as dedicated readonly link displays", () => {
+    const result = normalizeSettings({
+      defaultConfig: { layout: {}, panels: [{ fields: [{ type: "link", editable: true }] }] }
+    });
+    expect(result.defaultConfig.panels[0]!.fields[0]).toMatchObject({
+      type: "link",
+      editable: false
+    });
   });
 
   it("normalizes field long-value display modes", () => {

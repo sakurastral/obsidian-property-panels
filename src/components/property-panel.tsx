@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, CSSProperties, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
-import { Keymap, type TFile } from "obsidian";
+import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import { Keymap, Menu, type TFile } from "obsidian";
 import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, PropertyValue } from "../types";
 import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
 import { optionSourceKey } from "../options/option-dependency";
 import { effectiveColumnSpan } from "./field-layout";
 import { shouldRenderField } from "./field-visibility";
+import { appendCustomOption, fuzzyFilter } from "./fuzzy-search";
 import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
 import { panelHeaderState } from "./panel-header";
+import { editSelectedValue, moveSelectedValue } from "./selected-values";
 import { optionDisplayText, parseDisplayLink } from "./wiki-link";
 
 interface Props {
@@ -79,7 +81,7 @@ interface ControlProps extends Omit<FieldProps, "columnCount"> { id: string; val
 function FieldControl(props: ControlProps) {
   const { field, value, repository, file, id } = props;
   const write = useCallback((next: PropertyValue) => void repository.write(file, field.property, next), [repository, file, field.property]);
-  if (field.type === "readonly") return <ReadonlyControl id={id} value={value} file={file} options={props.options} />;
+  if (field.type === "readonly" || field.type === "link") return <ReadonlyControl id={id} value={value} file={file} options={props.options} />;
   if (field.type === "toggle") return <input id={id} type="checkbox" checked={Boolean(value)} disabled={!field.editable} onChange={(event) => write(event.target.checked)} />;
   if (field.type === "number") return (
     <input id={id} type="number" value={typeof value === "number" ? value : ""} disabled={!field.editable}
@@ -227,47 +229,137 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
 }) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | undefined>();
+  const [editValue, setEditValue] = useState("");
   const input = useRef<HTMLInputElement | null>(null);
+  const editInput = useRef<HTMLInputElement | null>(null);
+  const dragIndex = useRef<number | undefined>(undefined);
+  const cancelEdit = useRef(false);
   const listId = `${id}-options`;
-  const normalizedQuery = query.toLowerCase();
-  const filtered = items.filter((item) => !selected.includes(item.value) && optionLabel(item).toLowerCase().includes(normalizedQuery));
+  const filtered = fuzzyFilter(items.filter((item) => !selected.includes(item.value)), query, optionLabel);
   const customValue = query.trim();
-  const custom = customValue && filtered.length === 0 && field.allowCustom
-    ? { value: customValue, label: `Add “${optionDisplayText(customValue)}”` }
-    : null;
-  const available = custom ? [custom] : filtered;
+  const available = appendCustomOption(filtered, customValue, selected, Boolean(field.allowCustom), (value) => ({
+    value,
+    label: `Add “${optionDisplayText(value)}”`
+  }));
   useEffect(() => setActiveIndex((index) => Math.min(index, Math.max(available.length - 1, 0))), [available.length]);
-  const add = (item: string) => { if (item && !selected.includes(item)) write([...selected, item]); setQuery(""); setActiveIndex(0); input.current?.focus(); };
+  useEffect(() => {
+    if (editingIndex !== undefined) editInput.current?.select();
+  }, [editingIndex]);
+  const add = (item: string) => {
+    if (item && !selected.includes(item)) write([...selected, item]);
+    setQuery("");
+    setActiveIndex(0);
+    setOpen(true);
+    input.current?.focus();
+  };
+  const beginEdit = (index: number) => {
+    const item = selected[index];
+    if (!field.editable || item === undefined) return;
+    cancelEdit.current = false;
+    setEditingIndex(index);
+    setEditValue(item);
+  };
+  const finishEdit = () => {
+    if (editingIndex === undefined) return;
+    if (cancelEdit.current) {
+      cancelEdit.current = false;
+      setEditingIndex(undefined);
+      return;
+    }
+    const next = editSelectedValue(selected, editingIndex, editValue);
+    if (next !== selected) write(next);
+    setEditingIndex(undefined);
+  };
+  const move = (from: number, to: number) => {
+    const next = moveSelectedValue(selected, from, to);
+    if (next !== selected) write(next);
+  };
+  const showItemMenu = (event: ReactMouseEvent<HTMLElement>, index: number, item: string) => {
+    event.preventDefault();
+    const menu = new Menu();
+    menu.addItem((entry) => entry.setTitle("Copy value").setIcon("copy").onClick(() => {
+      void navigator.clipboard.writeText(item);
+    }));
+    if (field.editable) {
+      menu.addItem((entry) => entry.setTitle("Edit value").setIcon("pencil").onClick(() => beginEdit(index)));
+      menu.addItem((entry) => entry.setTitle("Move left").setIcon("arrow-left").setDisabled(index === 0).onClick(() => move(index, index - 1)));
+      menu.addItem((entry) => entry.setTitle("Move right").setIcon("arrow-right").setDisabled(index === selected.length - 1).onClick(() => move(index, index + 1)));
+      menu.addSeparator();
+      menu.addItem((entry) => entry.setTitle("Remove").setIcon("trash").onClick(() => write(selected.filter((_, itemIndex) => itemIndex !== index))));
+    }
+    menu.showAtMouseEvent(event.nativeEvent);
+  };
+  const startDrag = (event: DragEvent<HTMLButtonElement>, index: number) => {
+    dragIndex.current = index;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(index));
+  };
+  const drop = (event: DragEvent<HTMLElement>, index: number) => {
+    event.preventDefault();
+    const from = dragIndex.current;
+    dragIndex.current = undefined;
+    if (from !== undefined) move(from, index);
+  };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const result = multiSelectKeyboardResult(event.key, activeIndex, available.length);
     if (result.type === "none") return;
     event.preventDefault();
-    if (result.type === "navigate") setActiveIndex(result.index);
+    if (result.type === "navigate") {
+      setOpen(true);
+      setActiveIndex(result.index);
+    }
     else if (result.type === "select") {
       const item = available[result.index];
       if (item) add(item.value);
     } else {
       setQuery("");
       setActiveIndex(0);
+      setOpen(false);
     }
   };
   return <div id={id} className="property-panels-multiselect">
-    <div className="property-panels-chips">{selected.map((item) => (
-      <span className="property-panels-chip" key={item}>
-        <LinkedValue value={item} sourcePath={file.path} options={options} />
-        <button type="button" aria-label={`Remove ${optionDisplayText(item)}`} disabled={!field.editable} onClick={() => write(selected.filter((value) => value !== item))}>×</button>
+    <div className="property-panels-chips">{selected.map((item, index) => (
+      <span className="property-panels-chip" key={`${item}:${index}`}
+        onContextMenu={(event) => showItemMenu(event, index, item)}
+        onDragOver={(event) => { if (field.editable) event.preventDefault(); }}
+        onDrop={(event) => drop(event, index)}>
+        {field.editable && <button type="button" className="property-panels-chip-drag" draggable
+          aria-label={`Reorder ${optionDisplayText(item)}`} title="Drag to reorder"
+          onDragStart={(event) => startDrag(event, index)} onDragEnd={() => { dragIndex.current = undefined; }}>⋮⋮</button>}
+        {editingIndex === index
+          ? <input ref={editInput} className="property-panels-chip-edit" type="text" value={editValue}
+            aria-label={`Edit ${optionDisplayText(item)}`}
+            onChange={(event) => setEditValue(event.target.value)}
+            onBlur={finishEdit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") { event.preventDefault(); finishEdit(); }
+              if (event.key === "Escape") {
+                event.preventDefault();
+                cancelEdit.current = true;
+                setEditingIndex(undefined);
+              }
+            }} />
+          : <span className="property-panels-chip-value" onDoubleClick={() => beginEdit(index)}>
+            <LinkedValue value={item} sourcePath={file.path} options={options} />
+          </span>}
+        <button type="button" aria-label={`Remove ${optionDisplayText(item)}`} disabled={!field.editable}
+          onClick={() => write(selected.filter((_, itemIndex) => itemIndex !== index))}>×</button>
       </span>
     ))}</div>
     <input ref={input} type="search" value={query} disabled={!field.editable || status === "loading"} placeholder={status === "loading" ? "Loading…" : field.placeholder ?? "Search or add…"}
-      role="combobox" aria-autocomplete="list" aria-expanded={Boolean(query)} aria-controls={listId}
-      aria-activedescendant={query && available[activeIndex] ? `${listId}-${activeIndex}` : undefined}
+      role="combobox" aria-autocomplete="list" aria-expanded={open} aria-controls={listId}
+      aria-activedescendant={open && available[activeIndex] ? `${listId}-${activeIndex}` : undefined}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
       onChange={(event) => { setQuery(event.target.value); setActiveIndex(0); }}
       onKeyDown={onKeyDown} />
     {status === "error" && <div className="property-panels-option-status mod-error" role="alert">{error}</div>}
     {status === "ready" && items.length === 0 && selected.length === 0 && <div className="property-panels-option-status">No options available.</div>}
-    {query && <div id={listId} className="property-panels-options" role="listbox">
+    {open && status === "ready" && <div id={listId} className="property-panels-options" role="listbox">
       {available.map((item, index) => <div id={`${listId}-${index}`} role="option" aria-selected={activeIndex === index}
-        className={activeIndex === index ? "is-active" : ""} key={item.value}
+        className={activeIndex === index ? "is-active" : ""} key={`${item.value}:${index}`}
         onMouseEnter={() => setActiveIndex(index)} onMouseDown={(event) => event.preventDefault()} onClick={() => add(item.value)}>{optionLabel(item)}</div>)}
       {available.length === 0 && <span>No options</span>}
     </div>}

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0
+
+- Added a persistent `Add “…”` result beneath fuzzy Multi-select matches for custom values.
+- Removed the experimental Bases view, cache, option source, settings, diagnostics, styles, and tests.
+- Changed the default Delete empty values and Show in source mode settings to off.
+- Made every Field settings card independently collapsible while preserving its expanded state during rerenders.
+- Replaced folder-only rules with note rules that can filter by folder, tag, or wikilink, including automatic migration of legacy folder rules.
+- Made Multi-select chip text selectable and added right-click copy, edit, move, and remove actions.
+- Added double-click chip editing and drag-handle reordering that persists the frontmatter list order.
+- Added token-based fuzzy option search and displayed all available options when the search field is focused.
+- Reduced Multi-select chip vertical padding for a more compact shape.
+- Added Style Settings controls for theme-aware or custom field-input text and background colors.
+- Added a dedicated readonly Link field for HTTP(S), wikilink, and Markdown-link text values.
+
 ## 0.7.0
 
 - Added a setting to hide panels in plain Source Mode while leaving Live Preview visible.

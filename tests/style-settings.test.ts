@@ -53,4 +53,17 @@ describe("Style Settings definition", () => {
     expect(inputStyle?.default).toBe("property-panels-input-theme");
     expect(values).toContain("property-panels-input-borderless");
   });
+
+  it("offers theme-aware field input text and background colors", () => {
+    const text = definition.settings.find((setting) => setting.id === "property-panels-input-text-color-choice");
+    const background = definition.settings.find((setting) => setting.id === "property-panels-input-background-choice");
+    const textValues = (text?.options ?? []).map((option) => typeof option === "string" ? option : option.value);
+    const backgroundValues = (background?.options ?? []).map((option) => typeof option === "string" ? option : option.value);
+    expect(text?.default).toBe("var(--text-normal)");
+    expect(textValues).toContain("var(--text-accent)");
+    expect(textValues).toContain("var(--property-panels-input-text-custom)");
+    expect(background?.default).toBe("var(--interactive-normal)");
+    expect(backgroundValues).toContain("var(--background-primary)");
+    expect(backgroundValues).toContain("var(--property-panels-input-background-custom)");
+  });
 });

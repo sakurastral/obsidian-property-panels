@@ -15,23 +15,22 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.7.0 includes:
+Version 0.8.0 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
-- Text, textarea, number, toggle, select, multi-select, date, datetime, progress, rating, readonly, and horizontal-divider fields.
+- Text, textarea, number, toggle, select, multi-select, date, datetime, progress, rating, readonly, link, and horizontal-divider fields.
 - Static, frontmatter-file, Markdown-list, and folder option sources.
-- Default configuration and folder rules with direct-child/descendant matching and extend/replace inheritance.
+- Default configuration and note rules with folder, tag, or wikilink matching plus extend/replace inheritance.
 - Debounced text writes through `app.fileManager.processFrontMatter()`.
 - React root, observer, and metadata subscription cleanup.
 - Style Settings annotations plus Obsidian theme variables.
-- A visual editor for default layout, panels, fields, option sources, and folder rules.
+- A visual editor for default layout, panels, collapsible fields, option sources, and note rules.
 - Add, duplicate, delete, and reorder actions for panels, fields, and rules.
 - Type-specific settings for numbers, progress, rating, select, and multi-select fields.
-- A folder rule tester and a collapsible JSON editor for advanced/bulk changes.
+- A rule tester for note paths, tags, and wikilinks plus a collapsible JSON editor for advanced/bulk changes.
 - Runtime settings normalization for invalid or incomplete external data.
 - Vault folder Intellisense for folder rules and folder option sources.
-- An experimental Bases Cache View that publishes Base query results as Select/Multi-select options.
 - Full keyboard navigation for Multi-select option lists and Rating controls.
 - Source-aware cache invalidation for file and folder option providers.
 - Privacy-preserving runtime diagnostics available from Settings and the command palette.
@@ -47,8 +46,14 @@ Version 0.7.0 includes:
 - Per-panel title visibility and per-field empty-value visibility controls.
 - A theme-default or borderless field-input style exposed through Style Settings.
 - An empty initial configuration, so new installations begin without a predefined panel.
+- Selectable Multi-select chip text, right-click copy/edit actions, double-click editing, and drag-handle reordering.
+- Token-based fuzzy option search that lists all available choices when the search field is focused.
+- More compact Multi-select chips with reduced vertical padding.
+- Theme-aware field-input text and background colors with custom light/dark fallbacks.
+- A persistent `Add “…”` choice at the bottom of Multi-select results while entering a custom value.
+- Delete-empty-value and plain Source Mode display settings disabled by default.
 
-Version 0.7.0 requires Obsidian 1.10.0 or newer because the experimental integration uses the public Bases View API.
+Version 0.8.0 requires Obsidian 1.8.0 or newer.
 
 ## Install for testing
 
@@ -99,19 +104,9 @@ Date fields store `YYYY-MM-DD`. Datetime fields use the local HTML datetime form
 
 Selected and readonly values recognize `[[Note]]`, `https://example.com`, and `[Label](https://example.com)` link formats. Markdown links with a Vault path, such as `[Welcome](Notes/Welcome)`, open as internal links. Each field also has a **Long value display** setting: **Wrap long words** uses break-word wrapping, while **Truncate with ellipsis** keeps the value on one line and exposes the full source value as a tooltip.
 
+The dedicated **Link** field displays a text frontmatter value as a clickable HTTP(S), wikilink, or Markdown link. It is intentionally readonly; use a Text field when the URL itself must be edited inside the panel.
+
 Each field has a **Column span** setting from 1 to 12. In a three-column panel, a span of `2` behaves like Tailwind's `col-span-2`. A span larger than the active panel column count is clamped to the available columns, and narrow screens return every field to one column.
-
-## Experimental Bases option source
-
-Obsidian's public API supports custom Bases views but does not expose a stable API for executing an arbitrary `.base` query in the background. Property Panels therefore uses an explicit cache view:
-
-1. Open the `.base` file whose query results should become options.
-2. Add or change a view to **Property Panels Options**.
-3. In that view's options, set a unique **Property Panels cache key**—using the `.base` path is recommended.
-4. Choose the value and label properties.
-5. In a Property Panels Select or Multi-select field, choose **Bases cache (experimental)** and enter the same cache key.
-
-The view publishes updated query results whenever Bases calls `onDataUpdated()`. The cache is in memory and lasts until Property Panels is reloaded. After a reload, open the configured Base view once to repopulate it.
 
 ## DOM compatibility and maintenance risk
 
@@ -135,7 +130,7 @@ These selectors may require maintenance after an Obsidian update.
 ## Known limitations
 
 - Obsidian DOM placement must be smoke-tested against the exact desktop/mobile version and theme used.
-- Folder suggestions and the custom Bases view require an in-app smoke test; automated tests cannot reproduce Obsidian's complete UI runtime.
+- Folder suggestions and metadata-based note rules require an in-app smoke test; automated tests cannot reproduce Obsidian's complete UI runtime.
 - Folder option sources use `getMarkdownFiles()` when that particular source is opened. Results are cached for 30 seconds; no vault scan occurs during plugin startup.
 - The plugin does not preserve YAML comments beyond the behavior provided by Obsidian's `processFrontMatter()`.
 - Direct background execution of arbitrary `.base` files, arbitrary Markdown, Meta Bind, Dataview, formulas, half-stars, and nested YAML editing are out of scope.
@@ -143,6 +138,7 @@ These selectors may require maintenance after an Obsidian update.
 ## Keyboard controls
 
 - Multi-select: `Arrow Up`/`Arrow Down` changes the active option, `Enter` selects, and `Escape` closes the list. `Backspace` only edits the search text and never removes an existing chip.
+- Multi-select chips: select their text normally, double-click to edit, right-click for copy/edit/move/remove actions, or drag the `⋮⋮` handle to reorder.
 - Rating: Arrow keys move and select, `Home` selects the first rating, `End` selects the maximum, and `Delete`/`Backspace` clears when clearing is enabled.
 
 ## Diagnostics and configuration backup
@@ -162,6 +158,7 @@ Property Panels works without the Style Settings community plugin. If Style Sett
 - Border width/style, radius, panel padding, and Rating size
 - Field value font size using official Obsidian typography variables or a custom size
 - Theme-default or borderless field-input styling
+- Field-input text and background colors using Obsidian variables or custom light/dark colors
 
 Each color dropdown offers official Obsidian variables such as `--background-primary`, `--background-secondary`, `--interactive-accent`, `--color-accent`, text variables, and semantic colors. These follow the active theme. Selecting **Custom color** uses separate light and dark color pickers instead.
 

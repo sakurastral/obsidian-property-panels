@@ -13,7 +13,7 @@ export function fileBelongsToFolder(filePath: string, folderPath: string, recurs
 }
 
 export function optionSourceDependsOnPath(source: OptionSourceConfig, changedPath: string): boolean {
-  if (source.type === "static" || source.type === "bases") return false;
+  if (source.type === "static") return false;
   const changed = normalize(changedPath);
   if (source.type === "file-property" || source.type === "markdown-list") return normalize(source.path) === changed;
   const folder = normalize(source.path);

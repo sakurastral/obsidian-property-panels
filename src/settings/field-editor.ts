@@ -4,21 +4,24 @@ import type { OptionItem, OptionSourceConfig, PropertyFieldConfig, PropertyField
 import { cloneField, moveItem, parseOptionalNumber, sourceForType } from "./editor-utils";
 import type { FolderSuggestAttacher } from "./folder-path-suggest";
 
-const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "divider"];
-const SOURCE_TYPES: OptionSourceConfig["type"][] = ["static", "file-property", "markdown-list", "folder", "bases"];
+const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "link", "divider"];
+const SOURCE_TYPES: OptionSourceConfig["type"][] = ["static", "file-property", "markdown-list", "folder"];
 
 export function renderFieldEditor(
   parent: HTMLElement,
   fields: PropertyFieldConfig[],
   plugin: PropertyPanelsPlugin,
   rerender: () => void,
-  attachFolderSuggest: FolderSuggestAttacher
+  attachFolderSuggest: FolderSuggestAttacher,
+  scope = "fields"
 ): void {
   const list = parent.createDiv({ cls: "property-panels-editor-list property-panels-field-editor-list" });
   fields.forEach((field, index) => {
     const divider = field.type === "divider";
-    const card = list.createDiv({ cls: "property-panels-editor-card property-panels-field-editor" });
-    const header = card.createDiv({ cls: "property-panels-editor-card-header" });
+    const card = list.createEl("details", { cls: "property-panels-editor-card property-panels-field-editor" });
+    card.dataset.propertyPanelsEditorKey = `${scope}:field:${field.id}`;
+    card.open = true;
+    const header = card.createEl("summary", { cls: "property-panels-editor-card-header" });
     header.createEl("strong", { text: divider ? "Horizontal divider" : field.label || field.property || "Unnamed field" });
     const actions = header.createDiv({ cls: "property-panels-editor-actions" });
     actionButton(actions, "↑", "Move field up", index === 0, async () => { moveItem(fields, index, -1); await persist(plugin, rerender); });
@@ -41,7 +44,7 @@ export function renderFieldEditor(
       dropdown.setValue(field.type).onChange(async (value) => {
         const wasDivider = field.type === "divider";
         field.type = value as PropertyFieldType;
-        field.editable = field.type !== "readonly" && field.type !== "divider";
+        field.editable = field.type !== "readonly" && field.type !== "link" && field.type !== "divider";
         if (field.type === "divider") {
           field.property = "";
           field.labelDisplay = "hidden";
@@ -65,7 +68,7 @@ export function renderFieldEditor(
     if (!divider) {
       new Setting(grid).setName("Show when empty").setDesc("Keep this field visible when its frontmatter value is empty.")
         .addToggle((toggle) => toggle.setValue(field.showWhenEmpty).onChange(async (value) => { field.showWhenEmpty = value; await plugin.saveSettings(); }));
-      new Setting(grid).setName("Editable").addToggle((toggle) => toggle.setValue(field.editable).setDisabled(field.type === "readonly").onChange(async (value) => { field.editable = value; await plugin.saveSettings(); }));
+      new Setting(grid).setName("Editable").addToggle((toggle) => toggle.setValue(field.editable).setDisabled(field.type === "readonly" || field.type === "link").onChange(async (value) => { field.editable = value; await plugin.saveSettings(); }));
     }
     new Setting(grid)
       .setName("Column span")
@@ -139,7 +142,7 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
   const advanced = card.createDiv({ cls: "property-panels-editor-subsection" });
   advanced.createEl("h6", { text: "Option source" });
   new Setting(advanced).setName("Source type").addDropdown((dropdown) => {
-    SOURCE_TYPES.forEach((type) => { dropdown.addOption(type, type === "bases" ? "Bases cache (experimental)" : type); });
+    SOURCE_TYPES.forEach((type) => { dropdown.addOption(type, type); });
     dropdown.setValue(source.type).onChange(async (value) => { field.optionSource = sourceForType(value as OptionSourceConfig["type"]); await persist(plugin, rerender); });
   });
   if (field.type === "multi-select") {
@@ -151,8 +154,8 @@ function renderOptionSource(card: HTMLElement, field: PropertyFieldConfig, plugi
       source.options = parseOptions(value); await plugin.saveSettings();
     }));
   } else {
-    new Setting(advanced).setName(source.type === "folder" ? "Folder path" : source.type === "bases" ? "Base cache key" : "File path")
-      .setDesc(source.type === "folder" ? "Start typing to select a folder from this Vault." : source.type === "bases" ? "Must match the cache key configured in the Property Panels Options Bases view." : "")
+    new Setting(advanced).setName(source.type === "folder" ? "Folder path" : "File path")
+      .setDesc(source.type === "folder" ? "Start typing to select a folder from this Vault." : "")
       .addText((text) => {
         text.setValue(source.path).onChange(async (value) => { source.path = value.trim(); await plugin.saveSettings(); });
         if (source.type === "folder") {
@@ -192,7 +195,11 @@ function actionButton(parent: HTMLElement, text: string, label: string, disabled
   const button = parent.createEl("button", { text, attr: { "aria-label": label, type: "button" } });
   button.disabled = disabled;
   if (warning) button.addClass("mod-warning");
-  button.addEventListener("click", () => void action());
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void action();
+  });
 }
 function numberSetting(parent: HTMLElement, name: string, value: number | undefined, action: (value: number | undefined) => Promise<void>): void {
   new Setting(parent).setName(name).addText((text) => {

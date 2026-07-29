@@ -1,6 +1,5 @@
 import { normalizePath, TFile, type App } from "obsidian";
 import type { OptionContext, OptionItem, OptionSourceConfig } from "../types";
-import type { BasesOptionCache } from "./bases-option-cache";
 import { fileBelongsToFolder, optionSourceDependsOnPath, optionSourceKey } from "./option-dependency";
 import { folderOptionValue } from "./folder-option-value";
 
@@ -11,7 +10,7 @@ const unique = (items: OptionItem[]): OptionItem[] => {
 
 export class OptionService {
   private readonly cache = new Map<string, { time: number; items: OptionItem[]; source: OptionSourceConfig }>();
-  constructor(private readonly app: App, private readonly basesCache: BasesOptionCache) {}
+  constructor(private readonly app: App) {}
   clear(): void { this.cache.clear(); }
   getCacheSize(): number { return this.cache.size; }
 
@@ -23,11 +22,6 @@ export class OptionService {
 
   async load(source: OptionSourceConfig | undefined, context: OptionContext): Promise<OptionItem[]> {
     if (!source) return [];
-    if (source.type === "bases") {
-      const items = this.basesCache.get(source.path);
-      if (!items) throw new Error(`No Bases results cached for “${source.path}”. Open a Base using the Property Panels Options view and configure the same cache key.`);
-      return items;
-    }
     const key = optionSourceKey(source);
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.time < 30_000) return cached.items;
@@ -36,7 +30,7 @@ export class OptionService {
     return items;
   }
 
-  private async loadUncached(source: Exclude<OptionSourceConfig, { type: "bases" }>, _context: OptionContext): Promise<OptionItem[]> {
+  private async loadUncached(source: OptionSourceConfig, _context: OptionContext): Promise<OptionItem[]> {
     if (source.type === "static") return source.options;
     if (source.type === "folder") {
       const excluded = new Set((source.exclude ?? []).map((path) => normalizePath(path)));

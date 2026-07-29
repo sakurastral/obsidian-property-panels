@@ -1,36 +1,26 @@
-import { MarkdownView, Notice, Plugin } from "obsidian";
+import { getAllTags, MarkdownView, Notice, Plugin } from "obsidian";
 import { ConfigResolver } from "./config/config-resolver";
 import { OptionService } from "./options/option-service";
-import { BasesOptionCache } from "./options/bases-option-cache";
-import { PROPERTY_PANELS_BASES_VIEW, PropertyPanelsBasesView, basesViewOptions } from "./options/bases-options-view";
 import { PanelMountManager } from "./panels/panel-mount-manager";
 import { PositionResolver } from "./placement/position-resolver";
 import { PropertyRepository } from "./properties/property-repository";
 import { DEFAULT_SETTINGS } from "./settings/defaults";
 import { PropertyPanelsSettingTab } from "./settings/settings-tab";
 import { normalizeSettings } from "./settings/settings-normalizer";
-import type { PluginSettings } from "./types";
+import type { PluginSettings, RuleMatchContext } from "./types";
 
 export default class PropertyPanelsPlugin extends Plugin {
   settings: PluginSettings = structuredClone(DEFAULT_SETTINGS);
   configResolver = new ConfigResolver(this.settings);
   private repository!: PropertyRepository;
   private options!: OptionService;
-  private basesCache!: BasesOptionCache;
   private mounts!: PanelMountManager;
 
   async onload(): Promise<void> {
     this.settings = this.normalizeSettings(await this.loadData());
-    this.configResolver = new ConfigResolver(this.settings);
+    this.configResolver = new ConfigResolver(this.settings, (path) => this.getRuleContext(path));
     this.repository = new PropertyRepository(this.app, () => this.settings.behavior.deleteEmptyValues);
-    this.basesCache = new BasesOptionCache(() => this.options?.clear());
-    this.options = new OptionService(this.app, this.basesCache);
-    this.registerBasesView(PROPERTY_PANELS_BASES_VIEW, {
-      name: "Property Panels Options",
-      icon: "lucide-list-filter",
-      factory: (controller, containerEl) => new PropertyPanelsBasesView(controller, containerEl, this.basesCache),
-      options: basesViewOptions
-    });
+    this.options = new OptionService(this.app);
     const positionResolver = new PositionResolver((message) => {
       if (this.settings.behavior.debugLogging) console.debug(`[Property Panels] ${message}`);
     });
@@ -62,6 +52,10 @@ export default class PropertyPanelsPlugin extends Plugin {
     this.registerEvent(this.app.vault.on("modify", (file) => this.options.invalidatePath(file.path)));
     this.registerEvent(this.app.vault.on("create", (file) => this.options.invalidatePath(file.path)));
     this.registerEvent(this.app.vault.on("delete", (file) => this.options.invalidatePath(file.path)));
+    this.registerEvent(this.app.metadataCache.on("changed", () => {
+      this.configResolver.clear();
+      this.refresh();
+    }));
     this.app.workspace.onLayoutReady(() => this.refresh());
   }
 
@@ -84,9 +78,8 @@ export default class PropertyPanelsPlugin extends Plugin {
       markdownViews: this.app.workspace.getLeavesOfType("markdown").length,
       ...this.mounts.getDiagnostics(),
       optionCacheEntries: this.options.getCacheSize(),
-      basesCacheEntries: this.basesCache.getSize(),
       defaultPanels: this.settings.defaultConfig.panels.length,
-      folderRules: this.settings.folderRules.length
+      rules: this.settings.rules.length
     };
   }
 
@@ -107,5 +100,12 @@ export default class PropertyPanelsPlugin extends Plugin {
         .filter((view): view is MarkdownView => view instanceof MarkdownView);
       this.mounts.refreshAll(views);
     });
+  }
+
+  private getRuleContext(path: string): RuleMatchContext {
+    const cache = this.app.metadataCache.getCache(path);
+    const tags = cache ? getAllTags(cache) ?? [] : [];
+    const links = [...(cache?.links ?? []), ...(cache?.frontmatterLinks ?? [])].map((link) => link.link);
+    return { path, tags, links };
   }
 }

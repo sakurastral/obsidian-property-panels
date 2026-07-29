@@ -6,18 +6,18 @@ export type PanelPosition =
   | "before-linked-mentions" | "after-linked-mentions";
 export type PropertyFieldType =
   | "text" | "textarea" | "number" | "toggle" | "select"
-  | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly" | "divider";
+  | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly" | "link" | "divider";
 export type LabelDisplay = "visible" | "icon-only" | "hidden";
 export type LongTextDisplay = "wrap" | "truncate";
 export type FolderMatchMode = "folder-only" | "folder-and-children";
+export type RuleMatchType = "folder" | "tag" | "wikilink";
 
 export interface OptionItem { value: string; label: string; icon?: string }
 export type OptionSourceConfig =
   | { type: "static"; options: OptionItem[] }
   | { type: "file-property"; path: string; property: string }
   | { type: "markdown-list"; path: string; heading?: string }
-  | { type: "folder"; path: string; recursive: boolean; value: "path" | "basename"; wikilink: boolean; labelProperty?: string; exclude?: string[]; sort: boolean }
-  | { type: "bases"; path: string };
+  | { type: "folder"; path: string; recursive: boolean; value: "path" | "basename"; wikilink: boolean; labelProperty?: string; exclude?: string[]; sort: boolean };
 
 export interface ProgressConfig {
   min: number; max: number; step: number;
@@ -42,17 +42,18 @@ export interface PanelConfig {
   showTitle: boolean; collapsible: boolean; defaultCollapsed: boolean; cssClass?: string;
 }
 export interface BasePanelConfig { panels: PanelConfig[]; layout: LayoutConfig }
-export interface FolderRuleConfig { panels?: PanelConfig[]; layout?: Partial<LayoutConfig> }
-export interface FolderRule {
-  id: string; name: string; path: string; enabled: boolean;
+export interface RulePanelConfig { panels?: PanelConfig[]; layout?: Partial<LayoutConfig> }
+export interface PanelRule {
+  id: string; name: string; matchType: RuleMatchType; value: string; enabled: boolean;
   matchMode: FolderMatchMode; inheritance: "extend" | "replace";
-  priority: number; config: FolderRuleConfig;
+  priority: number; config: RulePanelConfig;
 }
+export interface RuleMatchContext { path: string; tags: string[]; links: string[] }
 export interface BehaviorSettings {
   textSaveDelay: number; deleteEmptyValues: boolean; showInSourceView: boolean; debugLogging: boolean;
 }
 export interface PluginSettings {
-  defaultConfig: BasePanelConfig; folderRules: FolderRule[]; behavior: BehaviorSettings;
+  defaultConfig: BasePanelConfig; rules: PanelRule[]; behavior: BehaviorSettings;
 }
 export interface ResolvedConfig { panels: PanelConfig[]; layout: LayoutConfig }
 export interface OptionContext { file: TFile }

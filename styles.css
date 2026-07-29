@@ -211,6 +211,70 @@ settings:
         value: property-panels-input-theme
       - label: Borderless
         value: property-panels-input-borderless
+  - id: property-panels-input-text-color-choice
+    title: Field input text
+    title.zh-TW: 欄位輸入文字
+    description: Choose an Obsidian theme variable or the custom color below.
+    description.zh-TW: 選擇 Obsidian 主題變數，或使用下方的自訂顏色。
+    type: variable-select
+    default: 'var(--text-normal)'
+    options:
+      - label: Text normal
+        value: 'var(--text-normal)'
+      - label: Text muted
+        value: 'var(--text-muted)'
+      - label: Text faint
+        value: 'var(--text-faint)'
+      - label: Text accent
+        value: 'var(--text-accent)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Custom color
+        value: 'var(--property-panels-input-text-custom)'
+  - id: property-panels-input-text-custom
+    title: Custom field input text
+    title.zh-TW: 自訂欄位輸入文字
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#222222'
+    default-dark: '#dddddd'
+  - id: property-panels-input-background-choice
+    title: Field input background
+    title.zh-TW: 欄位輸入框背景
+    description: Choose an Obsidian theme variable or the custom color below.
+    description.zh-TW: 選擇 Obsidian 主題變數，或使用下方的自訂顏色。
+    type: variable-select
+    default: 'var(--interactive-normal)'
+    options:
+      - label: Interactive normal
+        value: 'var(--interactive-normal)'
+      - label: Background primary
+        value: 'var(--background-primary)'
+      - label: Background primary alt
+        value: 'var(--background-primary-alt)'
+      - label: Background secondary
+        value: 'var(--background-secondary)'
+      - label: Background secondary alt
+        value: 'var(--background-secondary-alt)'
+      - label: Background modifier hover
+        value: 'var(--background-modifier-hover)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Accent
+        value: 'var(--color-accent)'
+      - label: Transparent
+        value: transparent
+      - label: Custom color
+        value: 'var(--property-panels-input-background-custom)'
+  - id: property-panels-input-background-custom
+    title: Custom field input background
+    title.zh-TW: 自訂欄位輸入框背景
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#f2f2f2'
+    default-dark: '#2a2a2a'
   - id: property-panels-control-colors
     title: Control colors
     title.zh-TW: 控制元件顏色
@@ -419,6 +483,10 @@ settings:
 .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select, output, .property-panels-chip, .property-panels-options) {
   font-size: var(--property-panels-field-value-size-choice, var(--font-text-size));
 }
+.property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) {
+  color: var(--property-panels-input-text-color-choice, var(--text-normal));
+  background-color: var(--property-panels-input-background-choice, var(--interactive-normal));
+}
 .property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) {
   border-color: transparent;
   background: transparent;
@@ -444,8 +512,13 @@ settings:
 .property-panels-rating button { padding: 0 2px; border: 0; box-shadow: none; background: transparent; color: var(--property-panels-rating-inactive-choice, var(--text-faint)); font-size: var(--property-panels-rating-size, 20px); }
 .property-panels-rating button.is-active { color: var(--property-panels-rating-active-choice, var(--color-yellow)); }
 .property-panels-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
-.property-panels-chip { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; min-width: 0; border-radius: 999px; background: var(--property-panels-chip-background-choice, var(--background-modifier-hover)); padding: 2px 7px; }
+.property-panels-chip { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; min-width: 0; border-radius: 999px; background: var(--property-panels-chip-background-choice, var(--background-modifier-hover)); padding: 1px 7px; line-height: 1.35; }
 .property-panels-chip button { padding: 0; border: 0; box-shadow: none; background: transparent; font-size: inherit; }
+.property-panels-chip-value,
+.property-panels-chip-value .property-panels-value-text { user-select: text; }
+.property-panels-chip-drag { cursor: grab; color: var(--text-faint); touch-action: none; }
+.property-panels-chip-drag:active { cursor: grabbing; }
+.property-panels-chip .property-panels-chip-edit { width: min(240px, 45vw); min-height: 0; height: auto; padding: 0 3px; line-height: inherit; }
 .property-panels-select-control { display: flex; align-items: center; gap: var(--size-2-2, 6px); min-width: 0; }
 .property-panels-select-control select { flex: 1; min-width: 0; }
 .property-panels-link { color: var(--link-color); text-decoration-line: none; }
@@ -514,6 +587,7 @@ settings:
   background: var(--background-primary);
 }
 .property-panels-editor-card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.property-panels-field-editor > summary { cursor: pointer; }
 .property-panels-editor-card-header .property-panels-editor-actions { margin: 0; }
 .property-panels-editor-subsection,
 .property-panels-editor-layout { margin: 10px 0 0; padding: 8px 10px; border-radius: 6px; background: var(--background-secondary); }
@@ -525,8 +599,6 @@ settings:
 .property-panels-editor-subsection textarea { width: min(420px, 100%); min-height: 100px; font-family: var(--font-monospace); }
 .property-panels-folder-suggest-name { font-weight: var(--font-medium); }
 .property-panels-folder-suggest-path { display: block; color: var(--text-muted); }
-.property-panels-bases-view { padding: var(--size-4-4); }
-.property-panels-bases-warning { color: var(--text-warning); }
 .property-panels-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 @media (max-width: 600px) {
   .property-panels-grid { grid-template-columns: 1fr; }

@@ -1,23 +1,25 @@
 import type {
-  BasePanelConfig, FolderRule, FolderRuleConfig, LabelDisplay, LayoutConfig, LongTextDisplay,
+  BasePanelConfig, LabelDisplay, LayoutConfig, LongTextDisplay, PanelRule,
   NumberConfig, OptionItem, OptionSourceConfig, PanelConfig, PanelPosition,
-  PluginSettings, ProgressConfig, PropertyFieldConfig, PropertyFieldType, RatingConfig
+  PluginSettings, ProgressConfig, PropertyFieldConfig, PropertyFieldType, RatingConfig,
+  RuleMatchType, RulePanelConfig
 } from "../types";
 import { DEFAULT_SETTINGS } from "./defaults";
 
-const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "divider"];
+const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "link", "divider"];
 const POSITIONS: PanelPosition[] = ["before-properties", "after-properties", "before-content", "after-content", "before-linked-mentions", "after-linked-mentions"];
 const LABELS: LabelDisplay[] = ["visible", "icon-only", "hidden"];
 const LONG_TEXT_DISPLAYS: LongTextDisplay[] = ["wrap", "truncate"];
 const DENSITIES: LayoutConfig["density"][] = ["compact", "normal", "comfortable"];
 const LABEL_POSITIONS: LayoutConfig["labelPosition"][] = ["top", "left", "inline"];
+const RULE_MATCH_TYPES: RuleMatchType[] = ["folder", "tag", "wikilink"];
 
 export function normalizeSettings(input: unknown): PluginSettings {
   const source = record(input);
   const behavior = record(source.behavior);
   return {
     defaultConfig: normalizeBaseConfig(source.defaultConfig),
-    folderRules: array(source.folderRules).map(normalizeFolderRule),
+    rules: array(Array.isArray(source.rules) ? source.rules : source.folderRules).map(normalizeRule),
     behavior: {
       textSaveDelay: clamp(number(behavior.textSaveDelay, DEFAULT_SETTINGS.behavior.textSaveDelay), 100, 5000),
       deleteEmptyValues: boolean(behavior.deleteEmptyValues, DEFAULT_SETTINGS.behavior.deleteEmptyValues),
@@ -69,7 +71,7 @@ function normalizeField(input: unknown): PropertyFieldConfig {
     property: divider ? string(source.property, "") : nonEmptyString(source.property, "property"),
     type,
     labelDisplay: divider ? "hidden" : enumValue(source.labelDisplay, LABELS, "visible"),
-    editable: type === "readonly" || divider ? false : boolean(source.editable, true),
+    editable: type === "readonly" || type === "link" || divider ? false : boolean(source.editable, true),
     visible: boolean(source.visible, true),
     showWhenEmpty: boolean(source.showWhenEmpty, true),
     longText: enumValue(source.longText, LONG_TEXT_DISPLAYS, "wrap"),
@@ -84,12 +86,17 @@ function normalizeField(input: unknown): PropertyFieldConfig {
   };
 }
 
-function normalizeFolderRule(input: unknown): FolderRule {
+function normalizeRule(input: unknown): PanelRule {
   const source = record(input);
+  const matchType = enumValue(source.matchType, RULE_MATCH_TYPES, "folder");
+  const legacyPath = string(source.path, "");
   return {
     id: nonEmptyString(source.id, crypto.randomUUID()),
-    name: nonEmptyString(source.name, "Unnamed folder rule"),
-    path: normalizePath(string(source.path, "")),
+    name: nonEmptyString(source.name, "Unnamed rule"),
+    matchType,
+    value: matchType === "folder"
+      ? normalizePath(string(source.value, legacyPath))
+      : normalizeRuleValue(string(source.value, legacyPath), matchType),
     enabled: boolean(source.enabled, true),
     matchMode: source.matchMode === "folder-only" ? "folder-only" : "folder-and-children",
     inheritance: source.inheritance === "replace" ? "replace" : "extend",
@@ -98,7 +105,7 @@ function normalizeFolderRule(input: unknown): FolderRule {
   };
 }
 
-function normalizeRuleConfig(input: unknown): FolderRuleConfig {
+function normalizeRuleConfig(input: unknown): RulePanelConfig {
   const source = record(input);
   const panels = Array.isArray(source.panels) ? source.panels.map(normalizePanel) : undefined;
   const layout = isRecord(source.layout) ? normalizePartialLayout(source.layout) : undefined;
@@ -153,8 +160,6 @@ function normalizeOptionSource(input: unknown): OptionSourceConfig | undefined {
         ...(labelProperty ? { labelProperty } : {}), ...(exclude.length ? { exclude } : {})
       };
     }
-    case "bases":
-      return { type: "bases", path: string(input.path, "") };
     default:
       return undefined;
   }
@@ -194,3 +199,9 @@ const clamp = (value: number, min: number, max: number): number => Math.max(min,
 const enumValue = <T extends string>(value: unknown, values: readonly T[], fallback: T): T => typeof value === "string" && values.includes(value as T) ? value as T : fallback;
 const optionalEnum = <T extends string>(value: unknown, values: readonly T[]): T | undefined => typeof value === "string" && values.includes(value as T) ? value as T : undefined;
 const normalizePath = (value: string): string => value.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+const normalizeRuleValue = (value: string, type: Exclude<RuleMatchType, "folder">): string => {
+  const trimmed = value.trim();
+  if (type === "tag") return trimmed.replace(/^#+/, "");
+  const content = trimmed.startsWith("[[") && trimmed.endsWith("]]") ? trimmed.slice(2, -2) : trimmed;
+  return content.split("|", 1)[0]?.trim() ?? "";
+};

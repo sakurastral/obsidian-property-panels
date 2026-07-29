@@ -1,8 +1,8 @@
 import { App, Modal, Notice, PluginSettingTab, Setting } from "obsidian";
 import type PropertyPanelsPlugin from "../main";
-import type { LayoutConfig } from "../types";
-import { matchesFolder } from "../config/config-resolver";
-import { renderFolderRuleEditor } from "./folder-rule-editor";
+import type { LayoutConfig, PanelRule, RuleMatchContext } from "../types";
+import { matchesRule } from "../config/config-resolver";
+import { renderRuleEditor } from "./folder-rule-editor";
 import { renderPanelEditor } from "./panel-editor";
 import { FolderPathSuggest } from "./folder-path-suggest";
 import { DEFAULT_SETTINGS } from "./defaults";
@@ -16,7 +16,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     this.closeFolderSuggests();
     this.containerEl.empty();
     this.containerEl.addClass("property-panels-settings");
-    this.containerEl.createEl("p", { text: "Configure editable frontmatter panels and folder-specific layouts. Changes are applied to every open Markdown view." });
+    this.containerEl.createEl("p", { text: "Configure editable frontmatter panels and note-specific rules. Changes are applied to every open Markdown view." });
     const rerender = this.rerenderPreservingViewState;
 
     this.renderBehavior();
@@ -26,7 +26,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
       description: "These panels are the starting configuration for every note.",
       scope: "default"
     });
-    renderFolderRuleEditor(this.containerEl, this.plugin, rerender, this.attachFolderSuggest);
+    renderRuleEditor(this.containerEl, this.plugin, rerender, this.attachFolderSuggest);
     this.renderRuleTester();
     this.renderDiagnostics();
     this.renderAdvancedJson();
@@ -101,18 +101,29 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
   private renderRuleTester(): void {
     const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    new Setting(section).setName("Folder rule tester").setHeading();
+    new Setting(section).setName("Rule tester").setHeading();
     let testPath = "";
+    let testTags: string[] = [];
+    let testLinks: string[] = [];
     const output = section.createEl("pre", { cls: "property-panels-rule-test" });
     const update = () => {
+      const context: RuleMatchContext = { path: testPath, tags: testTags, links: testLinks };
       this.plugin.configResolver.clear();
-      const matched = this.plugin.settings.folderRules
-        .filter((rule) => rule.enabled && matchesFolder(testPath, rule))
-        .sort((a, b) => pathDepth(a.path) - pathDepth(b.path) || a.priority - b.priority);
-      const resolved = this.plugin.configResolver.resolve(testPath);
+      const matched = this.plugin.settings.rules
+        .filter((rule) => rule.enabled && matchesRule(context, rule))
+        .sort((a, b) => ruleDepth(a) - ruleDepth(b) || a.priority - b.priority);
+      const resolved = this.plugin.configResolver.resolveContext(context);
       output.setText(`Matched rules:\n${matched.length ? matched.map((rule, i) => `${i + 1}. ${rule.name} (${rule.inheritance})`).join("\n") : "(default only)"}\n\nFinal panels:\n${resolved.panels.map((panel) => `${panel.enabled ? "✓" : "○"} ${panel.name}`).join("\n") || "(none)"}\n\nLayout:\n${resolved.layout.columns} column(s), ${resolved.layout.density}, labels ${resolved.layout.labelPosition}`);
     };
     new Setting(section).setName("Test note path").addText((text) => text.setPlaceholder("Knowledge/Tools/Obsidian.md").onChange((value) => { testPath = value; update(); }));
+    new Setting(section).setName("Test tags").setDesc("Separate tags with commas or spaces.").addText((text) => text.setPlaceholder("Project, writing").onChange((value) => {
+      testTags = value.split(/[\s,]+/).filter(Boolean);
+      update();
+    }));
+    new Setting(section).setName("Test wikilinks").setDesc("Enter one target per line.").addTextArea((text) => text.setPlaceholder("[[notes/welcome]]").onChange((value) => {
+      testLinks = value.split("\n").map((item) => item.trim()).filter(Boolean);
+      update();
+    }));
     update();
   }
 
@@ -171,13 +182,13 @@ function numberSetting(parent: HTMLElement, name: string, value: number, change:
     text.setValue(String(value)).onChange((next) => { const parsed = Number(next); if (Number.isFinite(parsed)) void change(parsed); });
   });
 }
-const pathDepth = (path: string): number => path.split("/").filter(Boolean).length;
+const ruleDepth = (rule: PanelRule): number => rule.matchType === "folder" ? rule.value.split("/").filter(Boolean).length : 0;
 
 class RestoreDefaultsModal extends Modal {
   constructor(app: App, private readonly restore: () => Promise<void>) { super(app); }
   onOpen(): void {
     this.contentEl.createEl("h2", { text: "Restore property panels defaults?" });
-    this.contentEl.createEl("p", { text: "This replaces every panel, field, folder rule, and behavior setting. Copy the JSON configuration first if you may need it later." });
+    this.contentEl.createEl("p", { text: "This replaces every panel, field, note rule, and behavior setting. Copy the JSON configuration first if you may need it later." });
     const actions = this.contentEl.createDiv({ cls: "property-panels-modal-actions" });
     const cancel = actions.createEl("button", { text: "Cancel" });
     cancel.addEventListener("click", () => this.close());

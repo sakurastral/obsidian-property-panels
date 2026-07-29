@@ -1,8 +1,8 @@
 {
   "id": "property-panels",
   "name": "Property Panels",
-  "version": "0.7.0",
-  "minAppVersion": "1.10.0",
+  "version": "0.8.0",
+  "minAppVersion": "1.8.0",
   "description": "Display and edit frontmatter properties in configurable panels inside notes.",
   "author": "",
   "isDesktopOnly": false
