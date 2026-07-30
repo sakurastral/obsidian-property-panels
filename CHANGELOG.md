@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.4
+
+- Vertically centered **Left, align end** labels within the first field-control line.
+- Replaced the fixed percentage-based label column with a shared width based on the longest visible label plus 8px.
+- Recalculated the label column when label content, visibility, fonts, or panel dimensions change.
+- Reset the first-line minimum height when the layout becomes stacked on narrow screens.
+
 ## 0.9.3
 
 - Aligned **Left, align end** labels with the first line of multi-line or taller field controls instead of vertically centering them across the complete field height.

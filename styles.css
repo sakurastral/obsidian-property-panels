@@ -623,8 +623,12 @@ settings:
   grid-template-columns: minmax(90px, .35fr) minmax(0, 1fr);
   align-items: center;
 }
+.property-panels-label-left-end .property-panels-field {
+  grid-template-columns: minmax(0, var(--property-panels-label-column-width, max-content)) minmax(0, 1fr);
+}
 .property-panels-label-left-end .property-panels-field > label {
   align-self: start;
+  min-height: var(--input-height, 30px);
   justify-self: end;
   text-align: end;
 }
@@ -850,6 +854,7 @@ settings:
   .property-panels-label-left-end .property-panels-field { display: flex; }
   .property-panels-label-left-end .property-panels-field > label {
     align-self: stretch;
+    min-height: 0;
     text-align: start;
   }
   .property-panels-editor-grid { grid-template-columns: 1fr; }

@@ -15,7 +15,7 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.9.3 includes:
+Version 0.9.4 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
@@ -63,8 +63,10 @@ Version 0.9.3 includes:
 - Borderless inputs that retain their configured Style Settings background color.
 - A **Left, align end** label position that keeps Left's two-column layout while right-aligning labels in their label column.
 - First-line vertical alignment for **Left, align end** labels beside multi-line or taller field controls.
+- First-line center alignment for **Left, align end** labels using the active Obsidian input height.
+- A shared **Left, align end** label column sized to the longest visible label plus a small 8px allowance.
 
-Version 0.9.3 requires Obsidian 1.8.0 or newer.
+Version 0.9.4 requires Obsidian 1.8.0 or newer.
 
 ## Install for testing
 
@@ -121,7 +123,7 @@ Each field has a **Column span** setting from 1 to 12. In a three-column panel, 
 
 Each non-divider field also has a **Label display** mode and a **Label icon** field. Start typing an icon name to search every icon registered in Obsidian, including its bundled Lucide icons. Top and left labels use an ellipsis when needed; inline labels remain on one line without truncation.
 
-Panel layouts support **Top**, **Left**, **Left, align end**, and **Inline** label positions. **Left, align end** uses the same label/control columns as **Left**, but aligns every label to the end of the label column and to the first line of its field control. On narrow screens it returns to the standard stacked, start-aligned layout.
+Panel layouts support **Top**, **Left**, **Left, align end**, and **Inline** label positions. **Left, align end** right-aligns every label in a shared column sized to the longest visible label plus 8px. Labels are vertically centered against the first control line instead of the complete height of multi-line fields. The width is recalculated when labels, fonts, visibility, or panel dimensions change. On narrow screens it returns to the standard stacked, start-aligned layout.
 
 ## DOM compatibility and maintenance risk
 

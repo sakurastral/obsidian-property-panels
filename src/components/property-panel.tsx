@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { Keymap, Menu, setIcon, type TFile } from "obsidian";
 import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, PropertyValue } from "../types";
@@ -9,6 +9,7 @@ import { effectiveColumnSpan } from "./field-layout";
 import { shouldRenderField } from "./field-visibility";
 import { appendCustomOption, fuzzyFilter } from "./fuzzy-search";
 import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
+import { syncLabelColumnWidth } from "./label-column-width";
 import { panelHeaderState } from "./panel-header";
 import { editSelectedValue, moveSelectedValue } from "./selected-values";
 import { optionDisplayText, parseDisplayLink } from "./wiki-link";
@@ -21,15 +22,33 @@ interface Props {
 export function PropertyPanel({ file, panel, layout, repository, options, saveDelay }: Props) {
   const [revision, setRevision] = useState(0);
   const [collapsed, setCollapsed] = useState(panel.defaultCollapsed);
+  const panelRef = useRef<HTMLElement | null>(null);
   useEffect(() => repository.subscribe(file, () => setRevision((value) => value + 1)), [file, repository]);
   const effective = { ...layout, ...panel.layout };
+  const labelSignature = panel.fields
+    .map((field) => `${field.id}:${field.visible}:${field.labelDisplay}:${field.icon ?? ""}:${field.label ?? field.property}`)
+    .join("|");
+  useLayoutEffect(() => {
+    const element = panelRef.current;
+    if (!element) return;
+    if (effective.labelPosition !== "left-end" || collapsed) {
+      element.style.removeProperty("--property-panels-label-column-width");
+      return;
+    }
+    const update = () => syncLabelColumnWidth(element);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    element.querySelectorAll(".property-panels-field > label").forEach((label) => observer.observe(label));
+    return () => observer.disconnect();
+  }, [collapsed, effective.labelPosition, labelSignature, revision]);
   const style = {
     "--property-panels-columns": String(effective.columns),
     "--property-panels-field-gap": `${effective.fieldGap ?? 10}px`
   } as CSSProperties;
   const header = panelHeaderState(panel.name, panel.collapsible, panel.showTitle);
   return (
-    <section className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
+    <section ref={panelRef} className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
       {header.visible && (
         <header className={`property-panels-header${header.title === "" ? " is-titleless" : ""}`}>
           {header.title !== "" && <span className="property-panels-title">{header.title}</span>}

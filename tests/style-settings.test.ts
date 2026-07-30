@@ -115,7 +115,8 @@ describe("Style Settings definition", () => {
     expect(css).toMatch(/\.property-panels-chip-drag svg \{[\s\S]*?color: inherit!important;[\s\S]*?stroke: currentColor!important;/);
   });
 
-  it("right-aligns labels at the first field line in the left-end layout", () => {
-    expect(css).toMatch(/\.property-panels-label-left-end \.property-panels-field > label \{[\s\S]*?align-self: start;[\s\S]*?justify-self: end;[\s\S]*?text-align: end;/);
+  it("centers right-aligned labels on the first field line in a content-sized column", () => {
+    expect(css).toMatch(/\.property-panels-label-left-end \.property-panels-field \{[\s\S]*?--property-panels-label-column-width/);
+    expect(css).toMatch(/\.property-panels-label-left-end \.property-panels-field > label \{[\s\S]*?align-self: start;[\s\S]*?min-height: var\(--input-height, 30px\);[\s\S]*?justify-self: end;[\s\S]*?text-align: end;/);
   });
 });
