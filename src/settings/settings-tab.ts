@@ -5,15 +5,17 @@ import { matchesRule } from "../config/config-resolver";
 import { renderRuleEditor } from "./folder-rule-editor";
 import { renderPanelEditor } from "./panel-editor";
 import { FolderPathSuggest } from "./folder-path-suggest";
+import { IconSuggest, type IconSuggestAttacher } from "./icon-suggest";
 import { DEFAULT_SETTINGS } from "./defaults";
 import { captureSettingsViewState, restoreSettingsViewState } from "./settings-view-state";
 
 export class PropertyPanelsSettingTab extends PluginSettingTab {
   private readonly folderSuggests = new Set<FolderPathSuggest>();
+  private readonly iconSuggests = new Set<IconSuggest>();
   constructor(app: App, private readonly plugin: PropertyPanelsPlugin) { super(app, plugin); }
 
   display(): void {
-    this.closeFolderSuggests();
+    this.closeSuggests();
     this.containerEl.empty();
     this.containerEl.addClass("property-panels-settings");
     this.containerEl.createEl("p", { text: "Configure editable frontmatter panels and note-specific rules. Changes are applied to every open Markdown view." });
@@ -21,12 +23,12 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
 
     this.renderBehavior();
     this.renderGlobalLayout();
-    renderPanelEditor(this.containerEl, this.plugin.settings.defaultConfig.panels, this.plugin, rerender, this.attachFolderSuggest, {
+    renderPanelEditor(this.containerEl, this.plugin.settings.defaultConfig.panels, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest, {
       title: "Default panels",
       description: "These panels are the starting configuration for every note.",
       scope: "default"
     });
-    renderRuleEditor(this.containerEl, this.plugin, rerender, this.attachFolderSuggest);
+    renderRuleEditor(this.containerEl, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest);
     this.renderRuleTester();
     this.renderDiagnostics();
     this.renderAdvancedJson();
@@ -42,7 +44,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
   };
 
   hide(): void {
-    this.closeFolderSuggests();
+    this.closeSuggests();
     super.hide();
   }
 
@@ -52,9 +54,17 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     input.placeholder ||= "Start typing a vault folder…";
   };
 
-  private closeFolderSuggests(): void {
+  private readonly attachIconSuggest: IconSuggestAttacher = (input, onSelect) => {
+    const suggest = new IconSuggest(this.app, input, onSelect);
+    this.iconSuggests.add(suggest);
+    input.placeholder ||= "Start typing an Obsidian icon…";
+  };
+
+  private closeSuggests(): void {
     for (const suggest of this.folderSuggests) suggest.close();
+    for (const suggest of this.iconSuggests) suggest.close();
     this.folderSuggests.clear();
+    this.iconSuggests.clear();
   }
 
   private renderBehavior(): void {

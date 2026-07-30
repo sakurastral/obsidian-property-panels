@@ -15,7 +15,7 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.8.0 includes:
+Version 0.9.0 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
@@ -50,10 +50,16 @@ Version 0.8.0 includes:
 - Token-based fuzzy option search that lists all available choices when the search field is focused.
 - More compact Multi-select chips with reduced vertical padding.
 - Theme-aware field-input text and background colors with custom light/dark fallbacks.
-- A persistent `Add “…”` choice at the bottom of Multi-select results while entering a custom value.
+- A persistent `Add “…”` choice at the top of Multi-select results while entering a custom value.
 - Delete-empty-value and plain Source Mode display settings disabled by default.
+- Windows-safe Multi-select chip alignment with SVG-based remove and drag controls.
+- Obsidian's built-in `grip-vertical` icon for drag handles, with theme-aware color and size controls.
+- Per-field Obsidian icon autocomplete and label modes for icon plus label, label only, icon only, or hidden.
+- Single-line field labels with ellipsis and full-width Multi-select search controls in inline layouts.
+- Rounded Select controls with theme-aware text and background colors.
+- Style Settings grouped by Panel, Field, Select, Rating and Progress, and Multi-select.
 
-Version 0.8.0 requires Obsidian 1.8.0 or newer.
+Version 0.9.0 requires Obsidian 1.8.0 or newer.
 
 ## Install for testing
 
@@ -108,6 +114,8 @@ The dedicated **Link** field displays a text frontmatter value as a clickable HT
 
 Each field has a **Column span** setting from 1 to 12. In a three-column panel, a span of `2` behaves like Tailwind's `col-span-2`. A span larger than the active panel column count is clamped to the available columns, and narrow screens return every field to one column.
 
+Each non-divider field also has a **Label display** mode and a **Label icon** field. Start typing an icon name to search every icon registered in Obsidian, including its bundled Lucide icons. Labels remain on one line; long labels use an ellipsis while their complete text remains available as a tooltip.
+
 ## DOM compatibility and maintenance risk
 
 Obsidian does not currently expose stable public insertion APIs for Properties and Linked Mentions. All selectors are isolated in `src/placement/position-resolver.ts`.
@@ -138,7 +146,7 @@ These selectors may require maintenance after an Obsidian update.
 ## Keyboard controls
 
 - Multi-select: `Arrow Up`/`Arrow Down` changes the active option, `Enter` selects, and `Escape` closes the list. `Backspace` only edits the search text and never removes an existing chip.
-- Multi-select chips: select their text normally, double-click to edit, right-click for copy/edit/move/remove actions, or drag the `⋮⋮` handle to reorder.
+- Multi-select chips: select their text normally, double-click to edit, right-click for copy/edit/move/remove actions, or drag the `grip-vertical` handle to reorder.
 - Rating: Arrow keys move and select, `Home` selects the first rating, `End` selects the maximum, and `Delete`/`Backspace` clears when clearing is enabled.
 
 ## Diagnostics and configuration backup
@@ -159,6 +167,11 @@ Property Panels works without the Style Settings community plugin. If Style Sett
 - Field value font size using official Obsidian typography variables or a custom size
 - Theme-default or borderless field-input styling
 - Field-input text and background colors using Obsidian variables or custom light/dark colors
+- Field label icon color and size, with `--text-faint` as the default color
+- Select text and background colors plus rounded Select controls
+- Multi-select drag-grip color and size, with `--text-faint` as the default color
+
+Controls are grouped by the component they affect: Panel, Field, Select, Rating and Progress, and Multi-select.
 
 Each color dropdown offers official Obsidian variables such as `--background-primary`, `--background-secondary`, `--interactive-accent`, `--color-accent`, text variables, and semantic colors. These follow the active theme. Selecting **Custom color** uses separate light and dark color pickers instead.
 

@@ -24,11 +24,11 @@ describe("fuzzy search", () => {
     expect(fuzzyFilter(values, "app z", (value) => value)).toEqual([]);
   });
 
-  it("appends the typed custom value after matching options", () => {
+  it("places the typed custom value before matching options", () => {
     expect(appendCustomOption(["apple tree", "app store"], "app t", [], true, (value) => `Add “${value}”`)).toEqual([
+      "Add “app t”",
       "apple tree",
-      "app store",
-      "Add “app t”"
+      "app store"
     ]);
   });
 });

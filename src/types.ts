@@ -7,7 +7,7 @@ export type PanelPosition =
 export type PropertyFieldType =
   | "text" | "textarea" | "number" | "toggle" | "select"
   | "multi-select" | "date" | "datetime" | "progress" | "rating" | "readonly" | "link" | "divider";
-export type LabelDisplay = "visible" | "icon-only" | "hidden";
+export type LabelDisplay = "visible" | "icon-label" | "icon-only" | "hidden";
 export type LongTextDisplay = "wrap" | "truncate";
 export type FolderMatchMode = "folder-only" | "folder-and-children";
 export type RuleMatchType = "folder" | "tag" | "wikilink";
@@ -27,7 +27,7 @@ export interface RatingConfig { max: number; allowClear: boolean }
 export interface NumberConfig { min?: number; max?: number; step?: number }
 export interface PropertyFieldConfig {
   id: string; property: string; type: PropertyFieldType;
-  label?: string; labelDisplay: LabelDisplay; editable: boolean; visible: boolean;
+  label?: string; icon?: string; labelDisplay: LabelDisplay; editable: boolean; visible: boolean;
   longText: LongTextDisplay; columnSpan: number; showWhenEmpty: boolean;
   placeholder?: string; allowCustom?: boolean; optionSource?: OptionSourceConfig;
   progress?: ProgressConfig; rating?: RatingConfig; number?: NumberConfig;

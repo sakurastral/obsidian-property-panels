@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from "react";
-import { Keymap, Menu, type TFile } from "obsidian";
+import { Keymap, Menu, setIcon, type TFile } from "obsidian";
 import type { LayoutConfig, OptionItem, PanelConfig, PropertyFieldConfig, PropertyValue } from "../types";
 import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
@@ -67,10 +67,15 @@ function Field({ field, file, repository, options, saveDelay, revision, columnCo
   const label = field.label || field.property;
   const value = repository.read(file, field.property);
   if (!shouldRenderField(field.type, field.showWhenEmpty, value)) return null;
-  const labelClass = field.labelDisplay === "hidden" ? "property-panels-visually-hidden" : field.labelDisplay === "icon-only" ? "property-panels-label-icon" : "";
+  const showIcon = field.labelDisplay === "icon-label" || field.labelDisplay === "icon-only";
+  const showText = field.labelDisplay === "visible" || field.labelDisplay === "icon-label" || field.labelDisplay === "hidden";
+  const labelClass = field.labelDisplay === "hidden" ? "property-panels-visually-hidden" : "";
   return (
     <div className={`property-panels-field property-panels-field-${field.type} property-panels-long-${field.longText}`} style={style}>
-      <label htmlFor={id} className={labelClass} title={field.labelDisplay === "icon-only" ? label : undefined}>{label}</label>
+      <label htmlFor={id} className={labelClass} title={label} aria-label={field.labelDisplay === "icon-only" ? label : undefined}>
+        {showIcon && <ObsidianIcon name={field.icon ?? "circle"} className="property-panels-label-icon" />}
+        {showText && <span className="property-panels-label-text">{label}</span>}
+      </label>
       <FieldControl id={id} field={field} file={file} value={value} repository={repository} options={options} saveDelay={saveDelay} revision={revision} />
     </div>
   );
@@ -327,7 +332,9 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
         onDrop={(event) => drop(event, index)}>
         {field.editable && <button type="button" className="property-panels-chip-drag" draggable
           aria-label={`Reorder ${optionDisplayText(item)}`} title="Drag to reorder"
-          onDragStart={(event) => startDrag(event, index)} onDragEnd={() => { dragIndex.current = undefined; }}>⋮⋮</button>}
+          onDragStart={(event) => startDrag(event, index)} onDragEnd={() => { dragIndex.current = undefined; }}>
+          <ObsidianIcon name="grip-vertical" />
+        </button>}
         {editingIndex === index
           ? <input ref={editInput} className="property-panels-chip-edit" type="text" value={editValue}
             aria-label={`Edit ${optionDisplayText(item)}`}
@@ -345,7 +352,9 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
             <LinkedValue value={item} sourcePath={file.path} options={options} />
           </span>}
         <button type="button" aria-label={`Remove ${optionDisplayText(item)}`} disabled={!field.editable}
-          onClick={() => write(selected.filter((_, itemIndex) => itemIndex !== index))}>×</button>
+          onClick={() => write(selected.filter((_, itemIndex) => itemIndex !== index))}>
+          <ObsidianIcon name="x" />
+        </button>
       </span>
     ))}</div>
     <input ref={input} type="search" value={query} disabled={!field.editable || status === "loading"} placeholder={status === "loading" ? "Loading…" : field.placeholder ?? "Search or add…"}
@@ -364,6 +373,17 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
       {available.length === 0 && <span>No options</span>}
     </div>}
   </div>;
+}
+
+function ObsidianIcon({ name, className = "" }: { name: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.replaceChildren();
+    setIcon(element, name);
+  }, [name]);
+  return <span ref={ref} className={className} aria-hidden="true" />;
 }
 
 function LinkedValue({ value, sourcePath, options, compact = false }: {

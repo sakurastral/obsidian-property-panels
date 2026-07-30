@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0
+
+- Fixed Multi-select chip alignment on Windows by constraining chip line height, sizing icon buttons explicitly, and replacing font-glyph controls with SVG icons.
+- Replaced the text drag handle with Obsidian's built-in `grip-vertical` icon.
+- Added Style Settings controls for drag-grip color and size, defaulting the grip to `--text-faint`.
+- Added per-field Obsidian icon autocomplete backed by the icons registered in Obsidian.
+- Added field-label display modes for icon and label, label only, icon only, or hidden.
+- Kept field labels on one line with ellipsis and made inline Multi-select search controls fill their available column.
+- Added theme-aware Select text and background colors and rounded Select controls.
+- Reorganized Style Settings into Panel, Field, Select, Rating and Progress, and Multi-select groups.
+- Moved the Multi-select `Add “…”` result above fuzzy matches.
+
 ## 0.8.0
 
 - Added a persistent `Add “…”` result beneath fuzzy Multi-select matches for custom values.

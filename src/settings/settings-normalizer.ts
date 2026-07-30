@@ -8,7 +8,7 @@ import { DEFAULT_SETTINGS } from "./defaults";
 
 const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "link", "divider"];
 const POSITIONS: PanelPosition[] = ["before-properties", "after-properties", "before-content", "after-content", "before-linked-mentions", "after-linked-mentions"];
-const LABELS: LabelDisplay[] = ["visible", "icon-only", "hidden"];
+const LABELS: LabelDisplay[] = ["visible", "icon-label", "icon-only", "hidden"];
 const LONG_TEXT_DISPLAYS: LongTextDisplay[] = ["wrap", "truncate"];
 const DENSITIES: LayoutConfig["density"][] = ["compact", "normal", "comfortable"];
 const LABEL_POSITIONS: LayoutConfig["labelPosition"][] = ["top", "left", "inline"];
@@ -60,6 +60,7 @@ function normalizeField(input: unknown): PropertyFieldConfig {
   const type = enumValue(source.type, FIELD_TYPES, "text");
   const divider = type === "divider";
   const label = optionalString(source.label);
+  const icon = optionalString(source.icon) ?? "circle";
   const supportsPlaceholder = type === "text" || type === "textarea";
   const placeholder = supportsPlaceholder ? optionalString(source.placeholder) : undefined;
   const optionSource = normalizeOptionSource(source.optionSource);
@@ -77,6 +78,7 @@ function normalizeField(input: unknown): PropertyFieldConfig {
     longText: enumValue(source.longText, LONG_TEXT_DISPLAYS, "wrap"),
     columnSpan: clamp(Math.round(number(source.columnSpan, divider ? 12 : 1)), 1, 12),
     ...(!divider && label ? { label } : {}),
+    ...(!divider ? { icon } : {}),
     ...(placeholder ? { placeholder } : {}),
     ...(typeof source.allowCustom === "boolean" ? { allowCustom: source.allowCustom } : {}),
     ...(optionSource ? { optionSource } : {}),

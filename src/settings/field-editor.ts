@@ -3,6 +3,7 @@ import type PropertyPanelsPlugin from "../main";
 import type { OptionItem, OptionSourceConfig, PropertyFieldConfig, PropertyFieldType } from "../types";
 import { cloneField, moveItem, parseOptionalNumber, sourceForType } from "./editor-utils";
 import type { FolderSuggestAttacher } from "./folder-path-suggest";
+import type { IconSuggestAttacher } from "./icon-suggest";
 
 const FIELD_TYPES: PropertyFieldType[] = ["text", "textarea", "number", "toggle", "select", "multi-select", "date", "datetime", "progress", "rating", "readonly", "link", "divider"];
 const SOURCE_TYPES: OptionSourceConfig["type"][] = ["static", "file-property", "markdown-list", "folder"];
@@ -13,6 +14,7 @@ export function renderFieldEditor(
   plugin: PropertyPanelsPlugin,
   rerender: () => void,
   attachFolderSuggest: FolderSuggestAttacher,
+  attachIconSuggest: IconSuggestAttacher,
   scope = "fields"
 ): void {
   const list = parent.createDiv({ cls: "property-panels-editor-list property-panels-field-editor-list" });
@@ -61,8 +63,20 @@ export function renderFieldEditor(
     });
     if (!divider) {
       new Setting(grid).setName("Label display").addDropdown((dropdown) => dropdown
-        .addOptions({ visible: "Visible", "icon-only": "Icon only", hidden: "Hidden" })
-        .setValue(field.labelDisplay).onChange(async (value) => { field.labelDisplay = value as PropertyFieldConfig["labelDisplay"]; await plugin.saveSettings(); }));
+        .addOptions({ "icon-label": "Icon and label", visible: "Label only", "icon-only": "Icon only", hidden: "Hidden" })
+        .setValue(field.labelDisplay).onChange(async (value) => { field.labelDisplay = value as PropertyFieldConfig["labelDisplay"]; await persist(plugin, rerender); }));
+      if (field.labelDisplay === "icon-label" || field.labelDisplay === "icon-only") {
+        new Setting(grid).setName("Label icon").setDesc("Start typing to choose an icon registered in Obsidian.").addText((text) => {
+          text.setValue(field.icon ?? "circle").onChange(async (value) => {
+            if (value.trim()) field.icon = value.trim(); else delete field.icon;
+            await plugin.saveSettings();
+          });
+          attachIconSuggest(text.inputEl, (icon) => {
+            field.icon = icon;
+            void plugin.saveSettings();
+          });
+        });
+      }
     }
     new Setting(grid).setName("Visible").addToggle((toggle) => toggle.setValue(field.visible).onChange(async (value) => { field.visible = value; await plugin.saveSettings(); }));
     if (!divider) {

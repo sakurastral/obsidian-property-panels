@@ -5,6 +5,7 @@ import { createField } from "./defaults";
 import { clonePanel, createPanel, moveItem } from "./editor-utils";
 import { renderFieldEditor } from "./field-editor";
 import type { FolderSuggestAttacher } from "./folder-path-suggest";
+import type { IconSuggestAttacher } from "./icon-suggest";
 
 const POSITIONS: PanelPosition[] = [
   "before-properties", "after-properties", "before-content",
@@ -17,6 +18,7 @@ export function renderPanelEditor(
   plugin: PropertyPanelsPlugin,
   rerender: () => void,
   attachFolderSuggest: FolderSuggestAttacher,
+  attachIconSuggest: IconSuggestAttacher,
   options: { title: string; description?: string; allowEmpty?: boolean; scope?: string }
 ): void {
   const section = parent.createDiv({ cls: "property-panels-editor-section" });
@@ -69,7 +71,7 @@ export function renderPanelEditor(
       await plugin.saveSettings();
       rerender();
     }));
-    renderFieldEditor(body, panel.fields, plugin, rerender, attachFolderSuggest, `${options.scope ?? "panels"}:panel:${panel.id}`);
+    renderFieldEditor(body, panel.fields, plugin, rerender, attachFolderSuggest, attachIconSuggest, `${options.scope ?? "panels"}:panel:${panel.id}`);
   });
 }
 

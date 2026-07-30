@@ -126,6 +126,26 @@ describe("settings normalization", () => {
     expect(result.defaultConfig.panels[0]!.fields.map((field) => field.longText)).toEqual(["truncate", "wrap"]);
   });
 
+  it("normalizes field label icon modes and icon names", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: {},
+        panels: [{ fields: [
+          { type: "text", labelDisplay: "icon-label", icon: "bookmark" },
+          { type: "text", labelDisplay: "unsupported", icon: "" }
+        ] }]
+      }
+    });
+    expect(result.defaultConfig.panels[0]!.fields[0]).toMatchObject({
+      labelDisplay: "icon-label",
+      icon: "bookmark"
+    });
+    expect(result.defaultConfig.panels[0]!.fields[1]).toMatchObject({
+      labelDisplay: "visible",
+      icon: "circle"
+    });
+  });
+
   it("defaults and clamps field column spans", () => {
     const result = normalizeSettings({
       defaultConfig: {

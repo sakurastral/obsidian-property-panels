@@ -4,8 +4,15 @@ import type { LayoutConfig, PanelRule, RuleMatchType } from "../types";
 import { createPanel, moveItem } from "./editor-utils";
 import { renderPanelEditor } from "./panel-editor";
 import type { FolderSuggestAttacher } from "./folder-path-suggest";
+import type { IconSuggestAttacher } from "./icon-suggest";
 
-export function renderRuleEditor(parent: HTMLElement, plugin: PropertyPanelsPlugin, rerender: () => void, attachFolderSuggest: FolderSuggestAttacher): void {
+export function renderRuleEditor(
+  parent: HTMLElement,
+  plugin: PropertyPanelsPlugin,
+  rerender: () => void,
+  attachFolderSuggest: FolderSuggestAttacher,
+  attachIconSuggest: IconSuggestAttacher
+): void {
   const section = parent.createDiv({ cls: "property-panels-editor-section" });
   section.createEl("h3", { text: "Note rules" });
   section.createEl("p", { text: "Apply panel configurations by folder, tag, or wikilink. Matching rules are applied by specificity and priority." });
@@ -85,7 +92,7 @@ export function renderRuleEditor(parent: HTMLElement, plugin: PropertyPanelsPlug
     body.createEl("h4", { text: "Panel overrides" });
     body.createEl("p", { text: rule.inheritance === "extend" ? "Panels with matching IDs replace inherited panels; new IDs are appended." : "Only the panels listed here are used for this rule." });
     rule.config.panels ??= [];
-    renderPanelEditor(body, rule.config.panels, plugin, rerender, attachFolderSuggest, { title: "Rule panels", allowEmpty: true, scope: `rule:${rule.id}` });
+    renderPanelEditor(body, rule.config.panels, plugin, rerender, attachFolderSuggest, attachIconSuggest, { title: "Rule panels", allowEmpty: true, scope: `rule:${rule.id}` });
     if (rule.config.panels.length === 0) {
       new Setting(body).setName("Create starter panel").addButton((add) => add.setButtonText("Create").onClick(async () => {
         rule.config.panels = [createPanel(`${rule.name} panel`)];

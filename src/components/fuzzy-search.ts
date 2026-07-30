@@ -27,7 +27,7 @@ export function appendCustomOption<T>(
   create: (value: string) => T
 ): T[] {
   const value = query.trim();
-  return value && allowCustom && !selected.includes(value) ? [...items, create(value)] : items;
+  return value && allowCustom && !selected.includes(value) ? [create(value), ...items] : items;
 }
 
 function fuzzyTokenScore(candidate: string, token: string): number | undefined {

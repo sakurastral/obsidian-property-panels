@@ -2,9 +2,9 @@
 name: Property Panels
 id: property-panels
 settings:
-  - id: property-panels-panel-colors
-    title: Panel colors
-    title.zh-TW: 面板顏色
+  - id: property-panels-panel-styles
+    title: Panel styles
+    title.zh-TW: 面板樣式
     type: heading
     level: 2
     collapsed: false
@@ -108,6 +108,12 @@ settings:
     opacity: true
     default-light: '#222222'
     default-dark: '#dddddd'
+  - id: property-panels-field-styles
+    title: Field styles
+    title.zh-TW: 欄位樣式
+    type: heading
+    level: 2
+    collapsed: true
   - id: property-panels-label-color-choice
     title: Field label color
     title.zh-TW: 欄位名稱顏色
@@ -134,6 +140,43 @@ settings:
     opacity: true
     default-light: '#666666'
     default-dark: '#aaaaaa'
+  - id: property-panels-label-icon-color-choice
+    title: Field label icon color
+    title.zh-TW: 欄位名稱圖示顏色
+    type: variable-select
+    default: 'var(--text-faint)'
+    options:
+      - label: Text faint
+        value: 'var(--text-faint)'
+      - label: Text muted
+        value: 'var(--text-muted)'
+      - label: Text normal
+        value: 'var(--text-normal)'
+      - label: Text accent
+        value: 'var(--text-accent)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Accent
+        value: 'var(--color-accent)'
+      - label: Custom color
+        value: 'var(--property-panels-label-icon-custom)'
+  - id: property-panels-label-icon-custom
+    title: Custom field label icon color
+    title.zh-TW: 自訂欄位名稱圖示顏色
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#888888'
+    default-dark: '#888888'
+  - id: property-panels-label-icon-size
+    title: Field label icon size
+    title.zh-TW: 欄位名稱圖示大小
+    type: variable-number-slider
+    default: 16
+    min: 10
+    max: 32
+    step: 1
+    format: px
   - id: property-panels-value-color-choice
     title: Readonly value color
     title.zh-TW: 唯讀值顏色
@@ -159,11 +202,10 @@ settings:
     default-light: '#222222'
     default-dark: '#dddddd'
   - id: property-panels-field-typography
-    title: Field typography
-    title.zh-TW: 欄位文字
+    title: Typography and inputs
+    title.zh-TW: 文字與輸入框
     type: heading
-    level: 2
-    collapsed: true
+    level: 3
   - id: property-panels-field-value-size-choice
     title: Field value size
     title.zh-TW: 欄位值字級
@@ -275,9 +317,67 @@ settings:
     opacity: true
     default-light: '#f2f2f2'
     default-dark: '#2a2a2a'
-  - id: property-panels-control-colors
-    title: Control colors
-    title.zh-TW: 控制元件顏色
+  - id: property-panels-select-styles
+    title: Select styles
+    title.zh-TW: 下拉選單樣式
+    type: heading
+    level: 2
+    collapsed: true
+  - id: property-panels-select-text-color-choice
+    title: Select text color
+    title.zh-TW: 下拉選單文字顏色
+    type: variable-select
+    default: 'var(--text-normal)'
+    options:
+      - label: Text normal
+        value: 'var(--text-normal)'
+      - label: Text muted
+        value: 'var(--text-muted)'
+      - label: Text accent
+        value: 'var(--text-accent)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Custom color
+        value: 'var(--property-panels-select-text-custom)'
+  - id: property-panels-select-text-custom
+    title: Custom select text color
+    title.zh-TW: 自訂下拉選單文字顏色
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#222222'
+    default-dark: '#dddddd'
+  - id: property-panels-select-background-choice
+    title: Select background
+    title.zh-TW: 下拉選單背景
+    type: variable-select
+    default: 'var(--interactive-normal)'
+    options:
+      - label: Interactive normal
+        value: 'var(--interactive-normal)'
+      - label: Background primary
+        value: 'var(--background-primary)'
+      - label: Background secondary
+        value: 'var(--background-secondary)'
+      - label: Background modifier hover
+        value: 'var(--background-modifier-hover)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Accent
+        value: 'var(--color-accent)'
+      - label: Custom color
+        value: 'var(--property-panels-select-background-custom)'
+  - id: property-panels-select-background-custom
+    title: Custom select background
+    title.zh-TW: 自訂下拉選單背景
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#f2f2f2'
+    default-dark: '#2a2a2a'
+  - id: property-panels-rating-progress-styles
+    title: Rating and progress styles
+    title.zh-TW: 評分與進度樣式
     type: heading
     level: 2
     collapsed: true
@@ -371,6 +471,12 @@ settings:
     opacity: true
     default-light: '#4a6ee0'
     default-dark: '#7b9cff'
+  - id: property-panels-multiselect-styles
+    title: Multi-select styles
+    title.zh-TW: 多選樣式
+    type: heading
+    level: 2
+    collapsed: true
   - id: property-panels-chip-background-choice
     title: Multi-select chip background
     title.zh-TW: 多選標籤背景
@@ -397,6 +503,41 @@ settings:
     opacity: true
     default-light: '#e8e8e8'
     default-dark: '#3a3a3a'
+  - id: property-panels-grip-color-choice
+    title: Drag grip color
+    title.zh-TW: 拖曳把手顏色
+    type: variable-select
+    default: 'var(--text-faint)'
+    options:
+      - label: Text faint
+        value: 'var(--text-faint)'
+      - label: Text muted
+        value: 'var(--text-muted)'
+      - label: Text normal
+        value: 'var(--text-normal)'
+      - label: Text accent
+        value: 'var(--text-accent)'
+      - label: Interactive accent
+        value: 'var(--interactive-accent)'
+      - label: Custom color
+        value: 'var(--property-panels-grip-custom)'
+  - id: property-panels-grip-custom
+    title: Custom drag grip color
+    title.zh-TW: 自訂拖曳把手顏色
+    type: variable-themed-color
+    format: hex
+    opacity: true
+    default-light: '#999999'
+    default-dark: '#777777'
+  - id: property-panels-grip-size
+    title: Drag grip size
+    title.zh-TW: 拖曳把手大小
+    type: variable-number-slider
+    default: 16
+    min: 10
+    max: 28
+    step: 1
+    format: px
   - id: property-panels-panel-geometry
     title: Panel geometry
     title.zh-TW: 面板尺寸與邊框
@@ -478,7 +619,22 @@ settings:
 }
 .property-panels-label-left .property-panels-field { display: grid; grid-template-columns: minmax(90px, .35fr) minmax(0, 1fr); align-items: center; }
 .property-panels-label-inline .property-panels-field { flex-direction: row; align-items: center; }
-.property-panels-field label { font-size: var(--font-ui-small); color: var(--property-panels-label-color-choice, var(--text-muted)); }
+.property-panels-label-inline .property-panels-field > :not(label) { flex: 1 1 auto; min-width: 0; }
+.property-panels-label-inline .property-panels-multiselect,
+.property-panels-label-inline .property-panels-multiselect > input[type="search"] { width: 100%; }
+.property-panels-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-1, 4px);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--property-panels-label-color-choice, var(--text-muted));
+  font-size: var(--font-ui-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.property-panels-label-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) { width: 100%; }
 .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select, output, .property-panels-chip, .property-panels-options) {
   font-size: var(--property-panels-field-value-size-choice, var(--font-text-size));
@@ -487,6 +643,12 @@ settings:
   color: var(--property-panels-input-text-color-choice, var(--text-normal));
   background-color: var(--property-panels-input-background-choice, var(--interactive-normal));
 }
+.property-panels-field select,
+.property-panels-field select option {
+  color: var(--property-panels-select-text-color-choice, var(--text-normal));
+  background-color: var(--property-panels-select-background-choice, var(--interactive-normal));
+}
+.property-panels-field select { border-radius: 999px; }
 .property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) {
   border-color: transparent;
   background: transparent;
@@ -511,12 +673,48 @@ settings:
 .property-panels-rating { display: flex; gap: 1px; }
 .property-panels-rating button { padding: 0 2px; border: 0; box-shadow: none; background: transparent; color: var(--property-panels-rating-inactive-choice, var(--text-faint)); font-size: var(--property-panels-rating-size, 20px); }
 .property-panels-rating button.is-active { color: var(--property-panels-rating-active-choice, var(--color-yellow)); }
-.property-panels-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
-.property-panels-chip { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; min-width: 0; border-radius: 999px; background: var(--property-panels-chip-background-choice, var(--background-modifier-hover)); padding: 1px 7px; line-height: 1.35; }
-.property-panels-chip button { padding: 0; border: 0; box-shadow: none; background: transparent; font-size: inherit; }
+.property-panels-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 5px; }
+.property-panels-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  min-height: calc(1em * 1.5);
+  overflow: clip;
+  border-radius: 999px;
+  background: var(--property-panels-chip-background-choice, var(--background-modifier-hover));
+  padding: 1px 7px;
+  line-height: 1.25;
+}
+.property-panels-chip button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: inherit;
+  line-height: 1;
+}
 .property-panels-chip-value,
-.property-panels-chip-value .property-panels-value-text { user-select: text; }
-.property-panels-chip-drag { cursor: grab; color: var(--text-faint); touch-action: none; }
+.property-panels-chip-value .property-panels-value-text { user-select: text; line-height: inherit; }
+.property-panels-chip-value { display: inline-flex; align-items: center; min-width: 0; line-height: inherit; }
+.property-panels-chip-drag {
+  width: var(--property-panels-grip-size, 16px)!important;
+  height: var(--property-panels-grip-size, 16px)!important;
+  cursor: grab;
+  color: var(--property-panels-grip-color-choice, var(--text-faint));
+  touch-action: none;
+}
+.property-panels-chip-drag svg { display: block; width: 100%; height: 100%; }
 .property-panels-chip-drag:active { cursor: grabbing; }
 .property-panels-chip .property-panels-chip-edit { width: min(240px, 45vw); min-height: 0; height: auto; padding: 0 3px; line-height: inherit; }
 .property-panels-select-control { display: flex; align-items: center; gap: var(--size-2-2, 6px); min-width: 0; }
@@ -547,8 +745,22 @@ settings:
 .property-panels-option-status.mod-error { color: var(--text-error); }
 .property-panels-readonly { overflow-wrap: anywhere; color: var(--property-panels-value-color-choice, var(--text-normal)); }
 .property-panels-visually-hidden { position: absolute!important; width: 1px!important; height: 1px!important; overflow: hidden!important; clip: rect(0,0,0,0)!important; white-space: nowrap!important; }
-.property-panels-label-icon { font-size: 0!important; }
-.property-panels-label-icon::before { content: "●"; font-size: 10px; }
+.property-panels-label-icon {
+  display: inline-flex;
+  flex: none;
+  width: var(--property-panels-label-icon-size, 16px);
+  height: var(--property-panels-label-icon-size, 16px);
+  color: var(--property-panels-label-icon-color-choice, var(--text-faint));
+}
+.property-panels-label-icon svg { display: block; width: 100%; height: 100%; }
+.property-panels-icon-suggest-preview {
+  display: inline-flex;
+  width: var(--icon-size, 18px);
+  height: var(--icon-size, 18px);
+  margin-inline-end: var(--size-2-2, 6px);
+  vertical-align: middle;
+}
+.property-panels-icon-suggest-preview svg { display: block; width: 100%; height: 100%; }
 .property-panels-settings-json { width: 100%; min-height: 360px; font-family: var(--font-monospace); resize: vertical; }
 .property-panels-rule-test { padding: 10px; background: var(--background-secondary); border-radius: 6px; white-space: pre-wrap; }
 .property-panels-settings { --property-panels-editor-border: var(--background-modifier-border); }
