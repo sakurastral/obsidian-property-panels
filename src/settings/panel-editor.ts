@@ -90,7 +90,9 @@ function renderLayoutOverrides(parent: HTMLElement, panel: PanelConfig, plugin: 
     if (value) panel.layout!.density = value as LayoutConfig["density"]; else delete panel.layout!.density;
     await plugin.saveSettings();
   });
-  dropdownOverride(body, "Label position", panel.layout.labelPosition, { "": "Inherit", top: "Top", left: "Left", inline: "Inline" }, async (value) => {
+  dropdownOverride(body, "Label position", panel.layout.labelPosition, {
+    "": "Inherit", top: "Top", left: "Left", "left-end": "Left, align end", inline: "Inline"
+  }, async (value) => {
     if (value) panel.layout!.labelPosition = value as LayoutConfig["labelPosition"]; else delete panel.layout!.labelPosition;
     await plugin.saveSettings();
   });

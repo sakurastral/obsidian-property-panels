@@ -118,7 +118,9 @@ function renderRuleLayout(parent: HTMLElement, rule: PanelRule, plugin: Property
     if (value) layout.density = value as LayoutConfig["density"]; else delete layout.density;
     await plugin.saveSettings();
   }));
-  new Setting(body).setName("Label position").addDropdown((dropdown) => dropdown.addOptions({ "": "Inherit", top: "Top", left: "Left", inline: "Inline" }).setValue(layout.labelPosition ?? "").onChange(async (value) => {
+  new Setting(body).setName("Label position").addDropdown((dropdown) => dropdown.addOptions({
+    "": "Inherit", top: "Top", left: "Left", "left-end": "Left, align end", inline: "Inline"
+  }).setValue(layout.labelPosition ?? "").onChange(async (value) => {
     if (value) layout.labelPosition = value as LayoutConfig["labelPosition"]; else delete layout.labelPosition;
     await plugin.saveSettings();
   }));

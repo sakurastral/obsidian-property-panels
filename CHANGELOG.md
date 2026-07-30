@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+- Added a **Left, align end** label position to the default layout, panel overrides, and rule overrides.
+- Reused the Left two-column layout while aligning labels to the end of their label column.
+- Restored stacked labels to start alignment on narrow screens.
+
 ## 0.9.1
 
 - Kept inline field labels on one line without clipping or ellipsis truncation.

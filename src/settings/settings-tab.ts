@@ -102,7 +102,9 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     new Setting(section).setName("Density").addDropdown((dropdown) => dropdown.addOptions({ compact: "Compact", normal: "Normal", comfortable: "Comfortable" }).setValue(layout.density).onChange(async (value) => {
       layout.density = value as LayoutConfig["density"]; await this.plugin.saveSettings();
     }));
-    new Setting(section).setName("Label position").addDropdown((dropdown) => dropdown.addOptions({ top: "Top", left: "Left", inline: "Inline" }).setValue(layout.labelPosition).onChange(async (value) => {
+    new Setting(section).setName("Label position").addDropdown((dropdown) => dropdown.addOptions({
+      top: "Top", left: "Left", "left-end": "Left, align end", inline: "Inline"
+    }).setValue(layout.labelPosition).onChange(async (value) => {
       layout.labelPosition = value as LayoutConfig["labelPosition"]; await this.plugin.saveSettings();
     }));
     numberSetting(section, "Field gap", layout.fieldGap ?? 10, async (value) => { layout.fieldGap = Math.max(0, value); await this.plugin.saveSettings(); });

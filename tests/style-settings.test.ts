@@ -114,4 +114,8 @@ describe("Style Settings definition", () => {
     expect(css).toMatch(/\.property-panels-chip-drag \{[\s\S]*?--icon-color: var\(--property-panels-grip-color-choice,[\s\S]*?color: var\(--property-panels-grip-color-choice/);
     expect(css).toMatch(/\.property-panels-chip-drag svg \{[\s\S]*?color: inherit!important;[\s\S]*?stroke: currentColor!important;/);
   });
+
+  it("right-aligns labels in the left-end layout", () => {
+    expect(css).toMatch(/\.property-panels-label-left-end \.property-panels-field > label \{[\s\S]*?justify-self: end;[\s\S]*?text-align: end;/);
+  });
 });

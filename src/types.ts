@@ -34,7 +34,7 @@ export interface PropertyFieldConfig {
 }
 export interface LayoutConfig {
   columns: number; density: "compact" | "normal" | "comfortable";
-  labelPosition: "top" | "left" | "inline"; fieldGap?: number; panelGap?: number;
+  labelPosition: "top" | "left" | "left-end" | "inline"; fieldGap?: number; panelGap?: number;
 }
 export interface PanelConfig {
   id: string; name: string; enabled: boolean; position: PanelPosition;

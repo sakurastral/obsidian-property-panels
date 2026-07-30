@@ -11,7 +11,7 @@ const POSITIONS: PanelPosition[] = ["before-properties", "after-properties", "be
 const LABELS: LabelDisplay[] = ["visible", "icon-label", "icon-only", "hidden"];
 const LONG_TEXT_DISPLAYS: LongTextDisplay[] = ["wrap", "truncate"];
 const DENSITIES: LayoutConfig["density"][] = ["compact", "normal", "comfortable"];
-const LABEL_POSITIONS: LayoutConfig["labelPosition"][] = ["top", "left", "inline"];
+const LABEL_POSITIONS: LayoutConfig["labelPosition"][] = ["top", "left", "left-end", "inline"];
 const RULE_MATCH_TYPES: RuleMatchType[] = ["folder", "tag", "wikilink"];
 
 export function normalizeSettings(input: unknown): PluginSettings {

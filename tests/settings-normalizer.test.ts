@@ -17,6 +17,19 @@ describe("settings normalization", () => {
     expect(result.defaultConfig.panels).toEqual([]);
   });
 
+  it("accepts end-aligned labels in global and inherited layouts", () => {
+    const result = normalizeSettings({
+      defaultConfig: {
+        layout: { labelPosition: "left-end" },
+        panels: [{ layout: { labelPosition: "left-end" }, fields: [] }]
+      },
+      rules: [{ config: { layout: { labelPosition: "left-end" } } }]
+    });
+    expect(result.defaultConfig.layout.labelPosition).toBe("left-end");
+    expect(result.defaultConfig.panels[0]!.layout?.labelPosition).toBe("left-end");
+    expect(result.rules[0]!.config.layout?.labelPosition).toBe("left-end");
+  });
+
   it("preserves the new visibility preferences", () => {
     const result = normalizeSettings({
       behavior: { showInSourceView: false },
