@@ -622,6 +622,16 @@ settings:
 .property-panels-label-inline .property-panels-field > :not(label) { flex: 1 1 auto; min-width: 0; }
 .property-panels-label-inline .property-panels-multiselect,
 .property-panels-label-inline .property-panels-multiselect > input[type="search"] { width: 100%; }
+.property-panels-label-inline .property-panels-field label {
+  flex: none;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+.property-panels-label-inline .property-panels-label-text {
+  overflow: visible;
+  text-overflow: clip;
+}
 .property-panels-field label {
   display: inline-flex;
   align-items: center;
@@ -651,7 +661,6 @@ settings:
 .property-panels-field select { border-radius: 999px; }
 .property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select) {
   border-color: transparent;
-  background: transparent;
   box-shadow: none;
 }
 .property-panels-input-borderless .property-panels-field :is(input[type="text"], input[type="number"], input[type="search"], input[type="date"], input[type="datetime-local"], textarea, select):focus-visible {
@@ -708,13 +717,25 @@ settings:
 .property-panels-chip-value .property-panels-value-text { user-select: text; line-height: inherit; }
 .property-panels-chip-value { display: inline-flex; align-items: center; min-width: 0; line-height: inherit; }
 .property-panels-chip-drag {
+  --icon-color: var(--property-panels-grip-color-choice, var(--text-faint));
+  --icon-color-hover: var(--property-panels-grip-color-choice, var(--text-faint));
   width: var(--property-panels-grip-size, 16px)!important;
   height: var(--property-panels-grip-size, 16px)!important;
   cursor: grab;
-  color: var(--property-panels-grip-color-choice, var(--text-faint));
+  color: var(--property-panels-grip-color-choice, var(--text-faint))!important;
   touch-action: none;
 }
-.property-panels-chip-drag svg { display: block; width: 100%; height: 100%; }
+.property-panels-chip-drag:hover,
+.property-panels-chip-drag:focus-visible {
+  color: var(--property-panels-grip-color-choice, var(--text-faint))!important;
+}
+.property-panels-chip-drag svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit!important;
+  stroke: currentColor!important;
+}
 .property-panels-chip-drag:active { cursor: grabbing; }
 .property-panels-chip .property-panels-chip-edit { width: min(240px, 45vw); min-height: 0; height: auto; padding: 0 3px; line-height: inherit; }
 .property-panels-select-control { display: flex; align-items: center; gap: var(--size-2-2, 6px); min-width: 0; }

@@ -102,4 +102,16 @@ describe("Style Settings definition", () => {
     expect(background?.default).toBe("var(--interactive-normal)");
     expect(backgroundValues).toContain("var(--property-panels-select-background-custom)");
   });
+
+  it("keeps inline labels untruncated and preserves configured borderless backgrounds", () => {
+    expect(css).toContain(".property-panels-label-inline .property-panels-field label {");
+    expect(css).toMatch(/\.property-panels-label-inline \.property-panels-field label \{[\s\S]*?overflow: visible;[\s\S]*?text-overflow: clip;/);
+    const borderless = css.match(/\.property-panels-input-borderless \.property-panels-field :is\([^)]+\) \{([\s\S]*?)\}/)?.[1] ?? "";
+    expect(borderless).not.toMatch(/background(?:-color)?:/);
+  });
+
+  it("passes the configured grip color through Obsidian icon variables and SVG stroke", () => {
+    expect(css).toMatch(/\.property-panels-chip-drag \{[\s\S]*?--icon-color: var\(--property-panels-grip-color-choice,[\s\S]*?color: var\(--property-panels-grip-color-choice/);
+    expect(css).toMatch(/\.property-panels-chip-drag svg \{[\s\S]*?color: inherit!important;[\s\S]*?stroke: currentColor!important;/);
+  });
 });

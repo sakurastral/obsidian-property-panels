@@ -15,7 +15,7 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.9.0 includes:
+Version 0.9.1 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
@@ -58,8 +58,11 @@ Version 0.9.0 includes:
 - Single-line field labels with ellipsis and full-width Multi-select search controls in inline layouts.
 - Rounded Select controls with theme-aware text and background colors.
 - Style Settings grouped by Panel, Field, Select, Rating and Progress, and Multi-select.
+- Inline field labels that remain on one line without truncation.
+- Drag-grip colors that correctly propagate through Obsidian icon variables and SVG strokes.
+- Borderless inputs that retain their configured Style Settings background color.
 
-Version 0.9.0 requires Obsidian 1.8.0 or newer.
+Version 0.9.1 requires Obsidian 1.8.0 or newer.
 
 ## Install for testing
 
@@ -114,7 +117,7 @@ The dedicated **Link** field displays a text frontmatter value as a clickable HT
 
 Each field has a **Column span** setting from 1 to 12. In a three-column panel, a span of `2` behaves like Tailwind's `col-span-2`. A span larger than the active panel column count is clamped to the available columns, and narrow screens return every field to one column.
 
-Each non-divider field also has a **Label display** mode and a **Label icon** field. Start typing an icon name to search every icon registered in Obsidian, including its bundled Lucide icons. Labels remain on one line; long labels use an ellipsis while their complete text remains available as a tooltip.
+Each non-divider field also has a **Label display** mode and a **Label icon** field. Start typing an icon name to search every icon registered in Obsidian, including its bundled Lucide icons. Top and left labels use an ellipsis when needed; inline labels remain on one line without truncation.
 
 ## DOM compatibility and maintenance risk
 

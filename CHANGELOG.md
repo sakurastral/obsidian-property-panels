@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+- Kept inline field labels on one line without clipping or ellipsis truncation.
+- Fixed Multi-select drag-grip colors by applying Style Settings values to Obsidian icon variables and SVG strokes.
+- Kept configured field-input background colors active when the Borderless input style is selected.
+
 ## 0.9.0
 
 - Fixed Multi-select chip alignment on Windows by constraining chip line height, sizing icon buttons explicitly, and replacing font-glyph controls with SVG icons.
