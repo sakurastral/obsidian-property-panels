@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.3
+
+- Aligned **Left, align end** labels with the first line of multi-line or taller field controls instead of vertically centering them across the complete field height.
+
 ## 0.9.2
 
 - Added a **Left, align end** label position to the default layout, panel overrides, and rule overrides.

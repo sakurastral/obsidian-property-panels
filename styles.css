@@ -624,6 +624,7 @@ settings:
   align-items: center;
 }
 .property-panels-label-left-end .property-panels-field > label {
+  align-self: start;
   justify-self: end;
   text-align: end;
 }
