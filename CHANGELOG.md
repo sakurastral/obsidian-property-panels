@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Replaced the partially supported `clip-path` visually-hidden technique with a broadly compatible opacity-based implementation.
+
 ## 1.0.1
 
 - Replaced the `builtin-modules` package with Node.js's native `node:module` API.

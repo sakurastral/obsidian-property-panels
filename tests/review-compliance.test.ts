@@ -20,5 +20,6 @@ describe("Community review compliance", () => {
     const styles = readProjectFile("styles.css");
     expect(styles).not.toContain("!important");
     expect(styles).not.toContain("text-decoration-line");
+    expect(styles).not.toContain("clip-path");
   });
 });

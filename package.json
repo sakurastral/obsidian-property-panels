@@ -1,6 +1,6 @@
 {
   "name": "obsidian-property-panels",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Editable frontmatter property panels for Obsidian",
   "main": "main.js",
   "scripts": {
