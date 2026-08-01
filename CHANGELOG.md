@@ -6,6 +6,7 @@
 - Reworked the README around installation, quick start, configuration, privacy, limitations, support, and release guidance.
 - Added a prominent AI development disclosure using a GitHub and Obsidian-compatible warning callout.
 - Added an example screenshot to the README.
+- Expanded the README with step-by-step BRAT installation instructions.
 
 ## 0.9.5
 

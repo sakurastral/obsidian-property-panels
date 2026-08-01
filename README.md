@@ -42,14 +42,24 @@ Once Property Panels is available in the Community plugins directory:
 3. Select **Install**, then **Enable**.
 4. Open **Settings → Property Panels** to add your first panel.
 
+### BRAT
+
+Use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to install the current GitHub version for testing before or outside the Community plugins release cycle:
+
+1. Install and enable **BRAT** from **Settings → Community plugins**.
+2. Open the command palette and run **BRAT: Add a beta plugin for testing**.
+3. Enter `sakurastral/obsidian-property-panels` or the full repository URL: `https://github.com/sakurastral/obsidian-property-panels`.
+4. Select **Add Plugin** and wait for BRAT to confirm the installation.
+5. Open **Settings → Community plugins**, refresh the installed plugin list if needed, and enable **Property Panels**.
+
+BRAT can also check for updates to the installed testing version. See the [BRAT quick guide](https://tfthacker.com/brat-quick-guide) for update and version-freezing options.
+
 ### Manual installation
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/sakurastral/obsidian-property-panels/releases/latest).
 2. Create `<Vault>/.obsidian/plugins/property-panels/`.
 3. Copy the three release files into that folder.
 4. Reload Obsidian and enable **Property Panels** under **Settings → Community plugins**.
-
-For beta testing with BRAT, add `sakurastral/obsidian-property-panels` as the repository.
 
 ## Quick start
 
