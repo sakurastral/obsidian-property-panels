@@ -29,7 +29,7 @@ Property Panels provides a visual settings editor for building compact metadata 
 - Customize theme-aware colors, typography, spacing, borders, inputs, chips, ratings, and progress controls through Style Settings.
 - Export, validate, and restore configuration through the advanced JSON editor.
 
-Property Panels requires Obsidian 1.8.0 or newer and supports desktop and mobile.
+Property Panels requires Obsidian 1.13.0 or newer and supports desktop and mobile.
 
 ## Installation
 

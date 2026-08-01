@@ -112,7 +112,7 @@ describe("Style Settings definition", () => {
 
   it("passes the configured grip color through Obsidian icon variables and SVG stroke", () => {
     expect(css).toMatch(/\.property-panels-chip-drag \{[\s\S]*?--icon-color: var\(--property-panels-grip-color-choice,[\s\S]*?color: var\(--property-panels-grip-color-choice/);
-    expect(css).toMatch(/\.property-panels-chip-drag svg \{[\s\S]*?color: inherit!important;[\s\S]*?stroke: currentColor!important;/);
+    expect(css).toMatch(/\.property-panels-chip button\.property-panels-chip-drag > svg \{[\s\S]*?color: inherit;[\s\S]*?stroke: currentColor;/);
   });
 
   it("centers right-aligned labels on the first field line in a content-sized column", () => {

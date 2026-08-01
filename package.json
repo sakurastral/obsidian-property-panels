@@ -1,11 +1,11 @@
 {
   "name": "obsidian-property-panels",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Editable frontmatter property panels for Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "build": "tsc --noEmit && node esbuild.config.mjs production && node scripts/verify-bundle.mjs",
     "test": "vitest run",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint ."
@@ -27,15 +27,14 @@
   "homepage": "https://github.com/sakurastral/obsidian-property-panels#readme",
   "license": "MIT",
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@types/node": "^24.1.0",
-    "@types/react": "^19.1.9",
-    "@types/react-dom": "^19.1.7",
-    "builtin-modules": "^5.0.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
     "esbuild": "^0.25.8",
     "eslint": "^9.39.5",
     "eslint-plugin-obsidianmd": "^0.4.1",

@@ -23,7 +23,7 @@ export default defineConfig(
 			},
 			parserOptions: {
 				projectService: {
-					allowDefaultProject: ["eslint.config.mts"],
+					allowDefaultProject: ["eslint.config.mts", "scripts/*.mjs"],
 				},
 				tsconfigRootDir: import.meta.dirname,
 			},
@@ -31,7 +31,7 @@ export default defineConfig(
 	},
 	...obsidianmd.configs.recommended,
 	{
-		files: ["tests/**/*.ts"],
+		files: ["scripts/*.mjs"],
 		languageOptions: {
 			globals: {
 				...globals.node,
@@ -42,12 +42,14 @@ export default defineConfig(
 		},
 	},
 	{
-		// The visual editor is deeply dynamic and still uses PluginSettingTab's
-		// imperative rendering API. Keep this exception scoped to that file.
-		files: ["src/settings/settings-tab.ts"],
+		files: ["tests/**/*.ts"],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+		},
 		rules: {
-			"@typescript-eslint/no-deprecated": "off",
-			"obsidianmd/settings-tab/prefer-setting-definitions": "off",
+			"obsidianmd/no-nodejs-modules": "off",
 		},
 	},
 );

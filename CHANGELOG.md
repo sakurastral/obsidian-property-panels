@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+
+- Replaced the `builtin-modules` package with Node.js's native `node:module` API.
+- Migrated the settings tab to Obsidian's declarative settings API so settings are searchable on Obsidian 1.13 and later.
+- Removed CSS `!important` declarations and unsupported link-decoration overrides while preserving theme-aware styling.
+- Moved to React 18.3.1 to eliminate dynamic script-element creation code from the production bundle.
+- Added a production-bundle verification step that prevents dynamic script-element creation from being released.
+- Raised the minimum supported Obsidian version to 1.13.0.
+
 ## 1.0.0
 
 - Published the first stable release of Property Panels for Community plugin submission.

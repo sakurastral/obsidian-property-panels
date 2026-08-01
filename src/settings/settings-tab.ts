@@ -1,6 +1,6 @@
-import { App, Modal, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, Modal, Notice, PluginSettingTab, Setting, type SettingDefinitionItem, type SettingDefinitionRender } from "obsidian";
 import type PropertyPanelsPlugin from "../main";
-import type { LayoutConfig, PanelRule, RuleMatchContext } from "../types";
+import type { PanelRule, RuleMatchContext } from "../types";
 import { matchesRule } from "../config/config-resolver";
 import { renderRuleEditor } from "./folder-rule-editor";
 import { renderPanelEditor } from "./panel-editor";
@@ -9,34 +9,189 @@ import { IconSuggest, type IconSuggestAttacher } from "./icon-suggest";
 import { DEFAULT_SETTINGS } from "./defaults";
 import { captureSettingsViewState, restoreSettingsViewState } from "./settings-view-state";
 
+type PropertyPanelsSettingKey =
+  | "behavior.textSaveDelay"
+  | "behavior.deleteEmptyValues"
+  | "behavior.showInSourceView"
+  | "behavior.debugLogging"
+  | "layout.columns"
+  | "layout.density"
+  | "layout.labelPosition"
+  | "layout.fieldGap"
+  | "layout.panelGap";
+
 export class PropertyPanelsSettingTab extends PluginSettingTab {
   private readonly folderSuggests = new Set<FolderPathSuggest>();
   private readonly iconSuggests = new Set<IconSuggest>();
-  constructor(app: App, private readonly plugin: PropertyPanelsPlugin) { super(app, plugin); }
-
-  display(): void {
-    this.closeSuggests();
-    this.containerEl.empty();
+  constructor(app: App, private readonly plugin: PropertyPanelsPlugin) {
+    super(app, plugin);
     this.containerEl.addClass("property-panels-settings");
-    this.containerEl.createEl("p", { text: "Configure editable frontmatter panels and note-specific rules. Changes are applied to every open Markdown view." });
+  }
+
+  getSettingDefinitions(): SettingDefinitionItem<PropertyPanelsSettingKey>[] {
     const rerender = this.rerenderPreservingViewState;
 
-    this.renderBehavior();
-    this.renderGlobalLayout();
-    renderPanelEditor(this.containerEl, this.plugin.settings.defaultConfig.panels, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest, {
-      title: "Default panels",
-      description: "These panels are the starting configuration for every note.",
-      scope: "default"
-    });
-    renderRuleEditor(this.containerEl, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest);
-    this.renderRuleTester();
-    this.renderDiagnostics();
-    this.renderAdvancedJson();
+    return [
+      {
+        type: "group",
+        heading: "Behavior",
+        cls: "property-panels-editor-section",
+        items: [
+          {
+            name: "Text save delay",
+            desc: "Milliseconds to wait before saving text and textarea fields.",
+            aliases: ["debounce", "save interval"],
+            control: { type: "number", key: "behavior.textSaveDelay", min: 100, max: 5000, step: 100, defaultValue: 500 }
+          },
+          {
+            name: "Delete empty values",
+            desc: "Remove the frontmatter key when a field is cleared.",
+            aliases: ["frontmatter", "clear property"],
+            control: { type: "toggle", key: "behavior.deleteEmptyValues", defaultValue: false }
+          },
+          {
+            name: "Show in source mode",
+            desc: "Display panels in plain Markdown source mode. Live preview is not affected.",
+            aliases: ["source view", "live preview"],
+            control: { type: "toggle", key: "behavior.showInSourceView", defaultValue: false }
+          },
+          {
+            name: "Debug logging",
+            desc: "Log placement fallbacks to the developer console.",
+            aliases: ["diagnostics", "developer console"],
+            control: { type: "toggle", key: "behavior.debugLogging", defaultValue: false }
+          }
+        ]
+      },
+      {
+        type: "group",
+        heading: "Default layout",
+        cls: "property-panels-editor-section",
+        items: [
+          {
+            name: "Columns",
+            aliases: ["grid"],
+            control: { type: "dropdown", key: "layout.columns", options: { "1": "1", "2": "2", "3": "3", "4": "4" }, defaultValue: "1" }
+          },
+          {
+            name: "Density",
+            aliases: ["spacing"],
+            control: { type: "dropdown", key: "layout.density", options: { compact: "Compact", normal: "Normal", comfortable: "Comfortable" }, defaultValue: "normal" }
+          },
+          {
+            name: "Label position",
+            aliases: ["field label", "inline label"],
+            control: { type: "dropdown", key: "layout.labelPosition", options: { top: "Top", left: "Left", "left-end": "Left, align end", inline: "Inline" }, defaultValue: "top" }
+          },
+          {
+            name: "Field gap",
+            desc: "Space between fields in pixels.",
+            control: { type: "number", key: "layout.fieldGap", min: 0, step: 1, defaultValue: 10 }
+          },
+          {
+            name: "Panel gap",
+            desc: "Space between panels in pixels.",
+            control: { type: "number", key: "layout.panelGap", min: 0, step: 1, defaultValue: 12 }
+          }
+        ]
+      },
+      this.customDefinition("Default panels", "Configure the panels and fields used as the starting point for every note.", ["fields", "properties", "position", "icons"], (container) => {
+        renderPanelEditor(container, this.plugin.settings.defaultConfig.panels, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest, {
+          title: "Default panels",
+          description: "These panels are the starting configuration for every note.",
+          scope: "default"
+        });
+      }),
+      this.customDefinition("Note rules", "Apply panel configurations by folder, tag, or wikilink.", ["inheritance", "folder rule", "tag rule", "wikilink rule"], (container) => {
+        renderRuleEditor(container, this.plugin, rerender, this.attachFolderSuggest, this.attachIconSuggest);
+      }),
+      this.customDefinition("Rule tester", "Test a note path, tags, and wikilinks against the configured rules.", ["match rules", "resolved panels"], (container) => this.renderRuleTester(container)),
+      this.customDefinition("Diagnostics", "Inspect and copy privacy-preserving runtime diagnostics.", ["debug", "copy diagnostics"], (container) => this.renderDiagnostics(container)),
+      this.customDefinition("Advanced JSON editor", "Copy, validate, import, or restore the complete plugin configuration.", ["backup", "restore defaults", "configuration JSON"], (container) => this.renderAdvancedJson(container))
+    ];
+  }
+
+  getControlValue(key: string): unknown {
+    const behavior = this.plugin.settings.behavior;
+    const layout = this.plugin.settings.defaultConfig.layout;
+    switch (key as PropertyPanelsSettingKey) {
+      case "behavior.textSaveDelay": return behavior.textSaveDelay;
+      case "behavior.deleteEmptyValues": return behavior.deleteEmptyValues;
+      case "behavior.showInSourceView": return behavior.showInSourceView;
+      case "behavior.debugLogging": return behavior.debugLogging;
+      case "layout.columns": return String(layout.columns);
+      case "layout.density": return layout.density;
+      case "layout.labelPosition": return layout.labelPosition;
+      case "layout.fieldGap": return layout.fieldGap ?? 10;
+      case "layout.panelGap": return layout.panelGap ?? 12;
+    }
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    const behavior = this.plugin.settings.behavior;
+    const layout = this.plugin.settings.defaultConfig.layout;
+    switch (key as PropertyPanelsSettingKey) {
+      case "behavior.textSaveDelay":
+        if (typeof value !== "number" || !Number.isFinite(value)) return;
+        behavior.textSaveDelay = Math.max(100, Math.min(5000, value));
+        break;
+      case "behavior.deleteEmptyValues":
+        if (typeof value !== "boolean") return;
+        behavior.deleteEmptyValues = value;
+        break;
+      case "behavior.showInSourceView":
+        if (typeof value !== "boolean") return;
+        behavior.showInSourceView = value;
+        break;
+      case "behavior.debugLogging":
+        if (typeof value !== "boolean") return;
+        behavior.debugLogging = value;
+        break;
+      case "layout.columns": {
+        const columns = Number(value);
+        if (!Number.isFinite(columns)) return;
+        layout.columns = Math.max(1, Math.min(4, Math.round(columns)));
+        break;
+      }
+      case "layout.density":
+        if (value !== "compact" && value !== "normal" && value !== "comfortable") return;
+        layout.density = value;
+        break;
+      case "layout.labelPosition":
+        if (value !== "top" && value !== "left" && value !== "left-end" && value !== "inline") return;
+        layout.labelPosition = value;
+        break;
+      case "layout.fieldGap":
+        if (typeof value !== "number" || !Number.isFinite(value)) return;
+        layout.fieldGap = Math.max(0, value);
+        break;
+      case "layout.panelGap":
+        if (typeof value !== "number" || !Number.isFinite(value)) return;
+        layout.panelGap = Math.max(0, value);
+        break;
+      default: return;
+    }
+    await this.plugin.saveSettings();
+  }
+
+  private customDefinition(name: string, desc: string, aliases: string[], render: (container: HTMLElement) => void): SettingDefinitionRender {
+    return {
+      name,
+      desc,
+      aliases,
+      render: (setting) => {
+        setting.settingEl.empty();
+        setting.settingEl.addClass("property-panels-custom-setting-definition");
+        render(setting.settingEl);
+        return () => this.closeSuggests();
+      }
+    };
   }
 
   private readonly rerenderPreservingViewState = (): void => {
     const state = captureSettingsViewState(this.containerEl);
-    this.display();
+    this.closeSuggests();
+    this.update();
     window.requestAnimationFrame(() => {
       restoreSettingsViewState(this.containerEl, state);
       window.requestAnimationFrame(() => restoreSettingsViewState(this.containerEl, state));
@@ -67,52 +222,8 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     this.iconSuggests.clear();
   }
 
-  private renderBehavior(): void {
-    const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    new Setting(section).setName("Behavior").setHeading();
-    new Setting(section).setName("Text save delay").setDesc("Milliseconds to wait before saving text and textarea fields.")
-      .addText((text) => {
-        text.inputEl.type = "number";
-        text.setValue(String(this.plugin.settings.behavior.textSaveDelay)).onChange(async (value) => {
-          const delay = Number(value);
-          if (Number.isFinite(delay)) { this.plugin.settings.behavior.textSaveDelay = Math.max(100, Math.min(5000, delay)); await this.plugin.saveSettings(); }
-        });
-      });
-    new Setting(section).setName("Delete empty values").setDesc("Remove the frontmatter key when a field is cleared.")
-      .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.deleteEmptyValues).onChange(async (value) => {
-        this.plugin.settings.behavior.deleteEmptyValues = value; await this.plugin.saveSettings();
-      }));
-    new Setting(section).setName("Show in source mode").setDesc("Display panels in plain Markdown source mode. Live preview is not affected.")
-      .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.showInSourceView).onChange(async (value) => {
-        this.plugin.settings.behavior.showInSourceView = value; await this.plugin.saveSettings();
-      }));
-    new Setting(section).setName("Debug logging").setDesc("Log placement fallbacks to the developer console.")
-      .addToggle((toggle) => toggle.setValue(this.plugin.settings.behavior.debugLogging).onChange(async (value) => {
-        this.plugin.settings.behavior.debugLogging = value; await this.plugin.saveSettings();
-      }));
-  }
-
-  private renderGlobalLayout(): void {
-    const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
-    new Setting(section).setName("Default layout").setHeading();
-    const layout = this.plugin.settings.defaultConfig.layout;
-    new Setting(section).setName("Columns").addDropdown((dropdown) => dropdown.addOptions({ "1": "1", "2": "2", "3": "3", "4": "4" }).setValue(String(layout.columns)).onChange(async (value) => {
-      layout.columns = Number(value); await this.plugin.saveSettings();
-    }));
-    new Setting(section).setName("Density").addDropdown((dropdown) => dropdown.addOptions({ compact: "Compact", normal: "Normal", comfortable: "Comfortable" }).setValue(layout.density).onChange(async (value) => {
-      layout.density = value as LayoutConfig["density"]; await this.plugin.saveSettings();
-    }));
-    new Setting(section).setName("Label position").addDropdown((dropdown) => dropdown.addOptions({
-      top: "Top", left: "Left", "left-end": "Left, align end", inline: "Inline"
-    }).setValue(layout.labelPosition).onChange(async (value) => {
-      layout.labelPosition = value as LayoutConfig["labelPosition"]; await this.plugin.saveSettings();
-    }));
-    numberSetting(section, "Field gap", layout.fieldGap ?? 10, async (value) => { layout.fieldGap = Math.max(0, value); await this.plugin.saveSettings(); });
-    numberSetting(section, "Panel gap", layout.panelGap ?? 12, async (value) => { layout.panelGap = Math.max(0, value); await this.plugin.saveSettings(); });
-  }
-
-  private renderRuleTester(): void {
-    const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
+  private renderRuleTester(parent: HTMLElement): void {
+    const section = parent.createDiv({ cls: "property-panels-editor-section" });
     new Setting(section).setName("Rule tester").setHeading();
     let testPath = "";
     let testTags: string[] = [];
@@ -139,8 +250,8 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     update();
   }
 
-  private renderAdvancedJson(): void {
-    const details = this.containerEl.createEl("details", { cls: "property-panels-editor-section property-panels-advanced-json" });
+  private renderAdvancedJson(parent: HTMLElement): void {
+    const details = parent.createEl("details", { cls: "property-panels-editor-section property-panels-advanced-json" });
     details.dataset.propertyPanelsEditorKey = "advanced-json";
     details.createEl("summary", { text: "Advanced JSON editor" });
     details.createEl("p", { text: "Use this for bulk changes or settings not exposed by the visual editor. Saving validates and normalizes the configuration." });
@@ -158,7 +269,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
           new RestoreDefaultsModal(this.app, async () => {
             this.plugin.settings = structuredClone(DEFAULT_SETTINGS);
             await this.plugin.saveSettings();
-            this.display();
+            this.rerenderPreservingViewState();
           }).open();
         });
         button.buttonEl.addClass("mod-warning");
@@ -170,7 +281,7 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
         const parsed: unknown = JSON.parse(editor.value);
         this.plugin.settings = this.plugin.normalizeSettings(parsed);
         await this.plugin.saveSettings();
-        this.display();
+        this.rerenderPreservingViewState();
         new Notice("Property panels settings saved.");
       } catch (error) {
         new Notice(`Invalid settings: ${error instanceof Error ? error.message : String(error)}`);
@@ -178,21 +289,14 @@ export class PropertyPanelsSettingTab extends PluginSettingTab {
     }));
   }
 
-  private renderDiagnostics(): void {
-    const section = this.containerEl.createDiv({ cls: "property-panels-editor-section" });
+  private renderDiagnostics(parent: HTMLElement): void {
+    const section = parent.createDiv({ cls: "property-panels-editor-section" });
     new Setting(section).setName("Diagnostics").setHeading();
     const diagnostics = this.plugin.getDiagnostics();
     section.createEl("pre", { text: JSON.stringify(diagnostics, null, 2), cls: "property-panels-rule-test" });
     new Setting(section).setName("Copy diagnostics").setDesc("Copies counts only; note paths and property values are not included.")
       .addButton((button) => button.setButtonText("Copy").onClick(() => void this.plugin.copyDiagnostics()));
   }
-}
-
-function numberSetting(parent: HTMLElement, name: string, value: number, change: (value: number) => Promise<void>): void {
-  new Setting(parent).setName(name).addText((text) => {
-    text.inputEl.type = "number";
-    text.setValue(String(value)).onChange((next) => { const parsed = Number(next); if (Number.isFinite(parsed)) void change(parsed); });
-  });
 }
 const ruleDepth = (rule: PanelRule): number => rule.matchType === "folder" ? rule.value.split("/").filter(Boolean).length : 0;
 
