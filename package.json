@@ -1,6 +1,6 @@
 {
   "name": "obsidian-property-panels",
-  "version": "0.9.5",
+  "version": "1.0.0",
   "description": "Editable frontmatter property panels for Obsidian",
   "main": "main.js",
   "scripts": {
@@ -16,7 +16,15 @@
     "frontmatter",
     "properties"
   ],
-  "author": "",
+  "author": "sakurastral",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sakurastral/obsidian-property-panels.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sakurastral/obsidian-property-panels/issues"
+  },
+  "homepage": "https://github.com/sakurastral/obsidian-property-panels#readme",
   "license": "MIT",
   "dependencies": {
     "react": "^19.1.1",

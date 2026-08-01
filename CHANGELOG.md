@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0
+
+- Published the first stable release of Property Panels for Community plugin submission.
+- Reworked the README around installation, quick start, configuration, privacy, limitations, support, and release guidance.
+- Added a prominent AI development disclosure using a GitHub and Obsidian-compatible warning callout.
+- Added an example screenshot to the README.
+
 ## 0.9.5
 
 - Added Link Field context-menu actions to edit, copy, or clear the raw frontmatter value.
