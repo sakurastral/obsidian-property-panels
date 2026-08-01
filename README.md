@@ -15,7 +15,7 @@ The codebase has **not** received a complete line-by-line human review. Automate
 
 ## Current release
 
-Version 0.9.4 includes:
+Version 0.9.5 includes:
 
 - Multiple panels in Reading Mode, Live Preview, and Source Mode where compatible with Obsidian's current DOM.
 - Positions before/after Properties, before/after content, and before/after Linked Mentions, with documented fallbacks.
@@ -65,8 +65,10 @@ Version 0.9.4 includes:
 - First-line vertical alignment for **Left, align end** labels beside multi-line or taller field controls.
 - First-line center alignment for **Left, align end** labels using the active Obsidian input height.
 - A shared **Left, align end** label column sized to the longest visible label plus a small 8px allowance.
+- Link Field context-menu actions for editing, copying, or clearing the raw frontmatter value.
+- Theme-aware warning red for destructive context-menu actions such as Clear value and Remove.
 
-Version 0.9.4 requires Obsidian 1.8.0 or newer.
+Version 0.9.5 requires Obsidian 1.8.0 or newer.
 
 ## Install for testing
 
@@ -117,7 +119,7 @@ Date fields store `YYYY-MM-DD`. Datetime fields use the local HTML datetime form
 
 Selected and readonly values recognize `[[Note]]`, `https://example.com`, and `[Label](https://example.com)` link formats. Markdown links with a Vault path, such as `[Welcome](Notes/Welcome)`, open as internal links. Each field also has a **Long value display** setting: **Wrap long words** uses break-word wrapping, while **Truncate with ellipsis** keeps the value on one line and exposes the full source value as a tooltip.
 
-The dedicated **Link** field displays a text frontmatter value as a clickable HTTP(S), wikilink, or Markdown link. It is intentionally readonly; use a Text field when the URL itself must be edited inside the panel.
+The dedicated **Link** field displays a text frontmatter value as a clickable HTTP(S), wikilink, or Markdown link. Right-click the displayed value to edit the raw frontmatter text, copy it, or clear it. Enter or leaving the input saves an edit; Escape cancels it. Clear value is shown with Obsidian's theme-aware warning color.
 
 Each field has a **Column span** setting from 1 to 12. In a three-column panel, a span of `2` behaves like Tailwind's `col-span-2`. A span larger than the active panel column count is clamped to the available columns, and narrow screens return every field to one column.
 

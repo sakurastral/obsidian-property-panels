@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.5
+
+- Added Link Field context-menu actions to edit, copy, or clear the raw frontmatter value.
+- Marked Link Clear value and Multi-select Remove context-menu actions with Obsidian's theme-aware warning red.
+
 ## 0.9.4
 
 - Vertically centered **Left, align end** labels within the first field-control line.

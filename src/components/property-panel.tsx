@@ -105,7 +105,8 @@ interface ControlProps extends Omit<FieldProps, "columnCount"> { id: string; val
 function FieldControl(props: ControlProps) {
   const { field, value, repository, file, id } = props;
   const write = useCallback((next: PropertyValue) => void repository.write(file, field.property, next), [repository, file, field.property]);
-  if (field.type === "readonly" || field.type === "link") return <ReadonlyControl id={id} value={value} file={file} options={props.options} />;
+  if (field.type === "readonly") return <ReadonlyControl id={id} value={value} file={file} options={props.options} />;
+  if (field.type === "link") return <LinkControl id={id} value={value} file={file} options={props.options} write={write} />;
   if (field.type === "toggle") return <input id={id} type="checkbox" checked={Boolean(value)} disabled={!field.editable} onChange={(event) => write(event.target.checked)} />;
   if (field.type === "number") return (
     <input id={id} type="number" value={typeof value === "number" ? value : ""} disabled={!field.editable}
@@ -125,6 +126,60 @@ function FieldControl(props: ControlProps) {
   if (field.type === "rating") return <RatingControl {...props} write={write} />;
   if (field.type === "select" || field.type === "multi-select") return <OptionControl {...props} write={write} />;
   return <TextControl {...props} write={write} multiline={field.type === "textarea"} />;
+}
+
+function LinkControl({ id, value, file, options, write }: {
+  id: string;
+  value: PropertyValue;
+  file: TFile;
+  options: OptionService;
+  write: (value: PropertyValue) => void;
+}) {
+  const current = typeof value === "string" ? value : value == null ? "" : String(value);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(current);
+  const input = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!editing) setDraft(current);
+  }, [current, editing]);
+  useEffect(() => {
+    if (editing) input.current?.select();
+  }, [editing]);
+  const beginEdit = () => {
+    setDraft(current);
+    setEditing(true);
+  };
+  const finishEdit = () => {
+    write(draft === "" ? null : draft);
+    setEditing(false);
+  };
+  const showMenu = (event: ReactMouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const menu = new Menu();
+    menu.addItem((entry) => entry.setTitle("Edit value").setIcon("pencil").onClick(beginEdit));
+    menu.addItem((entry) => entry.setTitle("Copy value").setIcon("copy").setDisabled(current === "").onClick(() => {
+      void navigator.clipboard.writeText(current);
+    }));
+    menu.addSeparator();
+    menu.addItem((entry) => entry.setTitle("Clear value").setIcon("trash").setWarning(true).setDisabled(current === "").onClick(() => write(null)));
+    menu.showAtMouseEvent(event.nativeEvent);
+  };
+  if (editing) return (
+    <input ref={input} id={id} className="property-panels-link-edit" type="text" value={draft}
+      aria-label="Edit link value"
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={finishEdit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") { event.preventDefault(); finishEdit(); }
+        if (event.key === "Escape") { event.preventDefault(); setEditing(false); }
+      }} />
+  );
+  return (
+    <output id={id} className="property-panels-readonly property-panels-link-control" onContextMenu={showMenu}>
+      {current === "" ? "—" : <LinkedValue value={current} sourcePath={file.path} options={options} />}
+    </output>
+  );
 }
 
 function ReadonlyControl({ id, value, file, options }: { id: string; value: PropertyValue; file: TFile; options: OptionService }) {
@@ -311,7 +366,7 @@ function MultiSelect({ id, field, file, options, items, selected, status, error,
       menu.addItem((entry) => entry.setTitle("Move left").setIcon("arrow-left").setDisabled(index === 0).onClick(() => move(index, index - 1)));
       menu.addItem((entry) => entry.setTitle("Move right").setIcon("arrow-right").setDisabled(index === selected.length - 1).onClick(() => move(index, index + 1)));
       menu.addSeparator();
-      menu.addItem((entry) => entry.setTitle("Remove").setIcon("trash").onClick(() => write(selected.filter((_, itemIndex) => itemIndex !== index))));
+      menu.addItem((entry) => entry.setTitle("Remove").setIcon("trash").setWarning(true).onClick(() => write(selected.filter((_, itemIndex) => itemIndex !== index))));
     }
     menu.showAtMouseEvent(event.nativeEvent);
   };
