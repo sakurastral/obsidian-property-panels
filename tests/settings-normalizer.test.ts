@@ -35,12 +35,20 @@ describe("settings normalization", () => {
       behavior: { showInSourceView: false },
       defaultConfig: {
         layout: {},
-        panels: [{ showTitle: false, fields: [{ type: "text", showWhenEmpty: false }] }]
+        panels: [{ showTitle: false, showOnlyEmptyFields: true, fields: [{ type: "text", showWhenEmpty: false }] }]
       }
     });
     expect(result.behavior.showInSourceView).toBe(false);
     expect(result.defaultConfig.panels[0]!.showTitle).toBe(false);
+    expect(result.defaultConfig.panels[0]!.showOnlyEmptyFields).toBe(true);
     expect(result.defaultConfig.panels[0]!.fields[0]!.showWhenEmpty).toBe(false);
+  });
+
+  it("keeps the panel empty-only filter opt-in", () => {
+    const result = normalizeSettings({
+      defaultConfig: { layout: {}, panels: [{ fields: [] }] }
+    });
+    expect(result.defaultConfig.panels[0]!.showOnlyEmptyFields).toBe(false);
   });
 
   it("normalizes dividers as full-width non-editable fields", () => {

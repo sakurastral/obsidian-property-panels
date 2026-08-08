@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Added a per-panel **Show only empty fields** option for building focused missing-metadata panels.
+- Hid empty-only panels automatically when no configured empty fields remain.
+- Preserved per-field **Show when empty** behavior and panel dividers while relevant empty fields are visible.
+
 ## 1.0.2
 
 - Replaced the partially supported `clip-path` visually-hidden technique with a broadly compatible opacity-based implementation.

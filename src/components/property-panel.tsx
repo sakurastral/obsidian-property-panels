@@ -6,7 +6,7 @@ import type { PropertyRepository } from "../properties/property-repository";
 import type { OptionService } from "../options/option-service";
 import { optionSourceKey } from "../options/option-dependency";
 import { effectiveColumnSpan } from "./field-layout";
-import { shouldRenderField } from "./field-visibility";
+import { fieldsToRender, shouldRenderField } from "./field-visibility";
 import { appendCustomOption, fuzzyFilter } from "./fuzzy-search";
 import { multiSelectKeyboardResult, ratingKeyboardResult } from "./keyboard-navigation";
 import { syncLabelColumnWidth } from "./label-column-width";
@@ -25,8 +25,9 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
   const panelRef = useRef<HTMLElement | null>(null);
   useEffect(() => repository.subscribe(file, () => setRevision((value) => value + 1)), [file, repository]);
   const effective = { ...layout, ...panel.layout };
-  const labelSignature = panel.fields
-    .map((field) => `${field.id}:${field.visible}:${field.labelDisplay}:${field.icon ?? ""}:${field.label ?? field.property}`)
+  const renderedFields = fieldsToRender(panel.fields, panel.showOnlyEmptyFields, (field) => repository.read(file, field.property));
+  const labelSignature = renderedFields
+    .map((field) => `${field.id}:${field.labelDisplay}:${field.icon ?? ""}:${field.label ?? field.property}`)
     .join("|");
   useLayoutEffect(() => {
     const element = panelRef.current;
@@ -47,6 +48,7 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
     "--property-panels-field-gap": `${effective.fieldGap ?? 10}px`
   } as CSSProperties;
   const header = panelHeaderState(panel.name, panel.collapsible, panel.showTitle);
+  if (panel.showOnlyEmptyFields && renderedFields.length === 0) return null;
   return (
     <section ref={panelRef} className={`property-panels-panel property-panels-density-${effective.density} ${panel.cssClass ?? ""}`} style={style}>
       {header.visible && (
@@ -61,7 +63,7 @@ export function PropertyPanel({ file, panel, layout, repository, options, saveDe
       )}
       {!collapsed && (
         <div className={`property-panels-grid property-panels-label-${effective.labelPosition}`}>
-          {panel.fields.filter((field) => field.visible).map((field) => (
+          {renderedFields.map((field) => (
             <Field key={field.id} field={field} columnCount={effective.columns} file={file} repository={repository} options={options} saveDelay={saveDelay} revision={revision} />
           ))}
         </div>

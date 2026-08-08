@@ -48,6 +48,7 @@ function normalizePanel(input: unknown): PanelConfig {
     position: enumValue(source.position, POSITIONS, "after-properties"),
     fields: array(source.fields).map(normalizeField),
     showTitle: boolean(source.showTitle, true),
+    showOnlyEmptyFields: boolean(source.showOnlyEmptyFields, false),
     collapsible: boolean(source.collapsible, false),
     defaultCollapsed: boolean(source.defaultCollapsed, false),
     ...(isRecord(rawLayout) ? { layout: normalizePartialLayout(rawLayout) } : {}),

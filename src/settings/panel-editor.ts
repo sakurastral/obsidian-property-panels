@@ -53,6 +53,13 @@ export function renderPanelEditor(
     }));
     new Setting(grid).setName("Enabled").addToggle((toggle) => toggle.setValue(panel.enabled).onChange(async (value) => { panel.enabled = value; await plugin.saveSettings(); }));
     new Setting(grid).setName("Show panel title").addToggle((toggle) => toggle.setValue(panel.showTitle).onChange(async (value) => { panel.showTitle = value; await plugin.saveSettings(); }));
+    new Setting(grid)
+      .setName("Show only empty fields")
+      .setDesc("Hide fields that already have a value. The panel is hidden when no empty fields remain.")
+      .addToggle((toggle) => toggle.setValue(panel.showOnlyEmptyFields).onChange(async (value) => {
+        panel.showOnlyEmptyFields = value;
+        await plugin.saveSettings();
+      }));
     new Setting(grid).setName("Position").addDropdown((dropdown) => {
       POSITIONS.forEach((position) => { dropdown.addOption(position, position); });
       dropdown.setValue(panel.position).onChange(async (value) => { panel.position = value as PanelPosition; await plugin.saveSettings(); });

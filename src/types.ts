@@ -39,7 +39,8 @@ export interface LayoutConfig {
 export interface PanelConfig {
   id: string; name: string; enabled: boolean; position: PanelPosition;
   fields: PropertyFieldConfig[]; layout?: Partial<LayoutConfig>;
-  showTitle: boolean; collapsible: boolean; defaultCollapsed: boolean; cssClass?: string;
+  showTitle: boolean; showOnlyEmptyFields: boolean;
+  collapsible: boolean; defaultCollapsed: boolean; cssClass?: string;
 }
 export interface BasePanelConfig { panels: PanelConfig[]; layout: LayoutConfig }
 export interface RulePanelConfig { panels?: PanelConfig[]; layout?: Partial<LayoutConfig> }

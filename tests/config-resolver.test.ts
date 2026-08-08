@@ -43,7 +43,7 @@ describe("config resolver", () => {
       rules: [
         { ...rule("Knowledge", "folder-and-children"), config: { layout: { columns: 2 } } },
         { ...rule("Knowledge/Tools", "folder-and-children"), inheritance: "replace", config: {
-          panels: [{ id: "tools", name: "Tools", enabled: true, position: "after-properties", fields: [], showTitle: true, collapsible: false, defaultCollapsed: false }]
+          panels: [{ id: "tools", name: "Tools", enabled: true, position: "after-properties", fields: [], showTitle: true, showOnlyEmptyFields: false, collapsible: false, defaultCollapsed: false }]
         } }
       ]
     };

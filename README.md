@@ -76,7 +76,9 @@ New installations start without a predefined panel, so enabling the plugin does 
 
 ### Panels and positions
 
-Each panel can be enabled, named, styled with a custom CSS class, made collapsible, or displayed without a title. Supported insertion positions are:
+Each panel can be enabled, named, styled with a custom CSS class, made collapsible, displayed without a title, or configured to show only fields whose frontmatter values are empty. Empty-only panels disappear automatically when no empty fields remain. Each field's **Show when empty** preference still applies.
+
+Supported insertion positions are:
 
 - Before or after **Properties**
 - Before or after the note content
